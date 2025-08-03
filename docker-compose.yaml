@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  waste-sync:
+    # To use a pre-built image from GHCR instead of building locally,
+    # comment out 'build: .' and uncomment the 'image:' line.
+    build: .
+    # image: ghcr.io/ronschaeffer/hounslow-bin-collection-calendar:latest
+    container_name: hounslow-bin-collection-calendar
+    restart: unless-stopped
+    ports:
+      - "${ICS_PORT:-8208}:8080"
+    volumes:
+      - ./www:/app/www:rw
+    # All configuration is now loaded from the .env file
+    env_file:
+      - .env

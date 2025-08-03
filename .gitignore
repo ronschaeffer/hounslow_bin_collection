@@ -81,3 +81,10 @@ config/local_*
 .cache/
 temp/
 tmp/
+
+# User Configuration - DO NOT COMMIT
+.env
+
+# Generated Output - DO NOT COMMIT
+*.ics
+www/
