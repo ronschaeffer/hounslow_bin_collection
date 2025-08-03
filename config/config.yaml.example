@@ -1,0 +1,18 @@
+# Example configuration for hounslow_bin_collection
+# Copy this file to config.yaml and modify as needed
+
+app:
+  name: "hounslow_bin_collection"
+  version: "0.1.0"
+  debug: false
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: null  # Set to a filename to log to file
+
+# Add your configuration sections here
+settings:
+  timeout: 30
+  retry_count: 3
+  batch_size: 100
