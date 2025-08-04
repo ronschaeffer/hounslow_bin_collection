@@ -6,13 +6,36 @@ app:
   version: "0.1.0"
   debug: false
 
+# Default test address (Hounslow Council headquarters)
+default_test:
+  postcode: "TW3 3EB"
+  address: "7 Bath Rd"
+  description: "Hounslow Council headquarters - used for testing and examples"
+
+# Production configuration - customize these values
+production:
+  postcode: ""  # Your postcode (e.g., "TW3 4XX")
+  address: ""   # Part of your address to match (e.g., "123 Your Street")
+
 logging:
   level: "INFO"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   file: null  # Set to a filename to log to file
+
+# Browser automation settings
+browser:
+  headless: true          # Run browser in headless mode (recommended for production)
+  timeout: 30000         # Timeout in milliseconds for browser operations
+  screenshot_on_error: true  # Save screenshots when errors occur
 
 # Add your configuration sections here
 settings:
   timeout: 30
   retry_count: 3
   batch_size: 100
+
+# Rate limiting (to be respectful to the council website)
+rate_limiting:
+  enabled: true
+  min_delay_seconds: 5    # Minimum delay between requests
+  max_requests_per_hour: 10  # Maximum requests per hour

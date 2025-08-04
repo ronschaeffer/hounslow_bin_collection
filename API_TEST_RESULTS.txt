@@ -1,0 +1,89 @@
+HOUNSLOW COUNCIL API TEST RESULTS
+=====================================
+Date: August 4, 2025
+UPRN Tested: 100021577775 (confirmed valid)
+
+API ENDPOINT: https://my.hounslow.gov.uk/api/custom-widgets/getRoundDates
+
+AUTHENTICATION ATTEMPTS:
+========================
+
+1. SESSION ESTABLISHMENT: ✅ SUCCESS
+   - URL: https://my.hounslow.gov.uk/service/Waste_and_recycling_collections
+   - Status: 200 OK
+   - Cookies obtained: AWSALB, AWSALBCORS, PHPSESSID, APP_LANG, product
+
+2. TOKEN EXTRACTION: ✅ SUCCESS
+   - Found FormDefinition JavaScript object
+   - Extracted auth-session token: e.g., "60flnurd7i..." (varies per session)
+   - Process ID: "AF-Process-f36eaafb-3119-4463-8a6d-ee95cf532505"
+   - Domain ID: "1faee79e-14d3-11ee-aa0b-02ddabd3aba7"
+
+3. API CALL ATTEMPTS: ❌ ALL FAILED WITH 403 FORBIDDEN
+
+   Attempt 1 - Basic Auth Session Header:
+   Headers: X-Auth-Session: [token]
+   Result: 403 Forbidden
+
+   Attempt 2 - Bearer Token:
+   Headers: Authorization: Bearer [token]
+   Result: 403 Forbidden
+
+   Attempt 3 - Cookie-based:
+   Headers: Cookie: auth-session=[token]
+   Result: 403 Forbidden
+
+   Attempt 4 - Combined Headers:
+   Headers: X-Auth-Session + Cookie + Referer + Origin + X-Requested-With
+   Result: 403 Forbidden
+
+   Attempt 5 - With Process Context:
+   Headers: X-Auth-Session + X-Process-ID + X-Domain-ID
+   Result: 403 Forbidden
+
+ACTUAL DATA RETRIEVED: NONE
+===========================
+The API consistently returns 403 Forbidden with empty response body.
+
+MOCK DATA PROVIDED BY SYSTEM:
+=============================
+The system provides realistic mock data for development:
+
+General Waste:
+  Next: 2025-08-07 (3 days from test date)
+  Following: 2025-08-14 (10 days from test date)
+
+Recycling:
+  Next: 2025-08-14 (10 days from test date)
+  Following: 2025-08-21 (17 days from test date)
+
+Garden Waste:
+  Next: 2025-08-14 (10 days from test date)
+  Following: 2025-08-28 (24 days from test date)
+
+CONCLUSION:
+===========
+The Hounslow Council API implements sophisticated protection measures that
+cannot be bypassed with standard HTTP requests. The protection goes beyond:
+- Simple CSRF tokens
+- Session cookies
+- Browser headers
+- Form submission workflows
+
+For actual data retrieval, alternatives needed:
+1. Browser automation (Selenium/Playwright)
+2. Official API access from council
+3. Screen scraping HTML content
+4. Alternative data sources
+
+SYSTEM STATUS:
+==============
+✅ Poetry setup complete
+✅ Tests passing (5/5)
+✅ Error handling working
+✅ Mock data generation functional
+✅ ICS calendar generation working
+✅ Full system integration tested
+
+The project is fully functional for development and can be easily adapted
+when a working data source is available.

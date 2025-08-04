@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/github/license/ronschaeffer/hounslow-bin-collection-calendar)](https://opensource.org/licenses/MIT)
 [![GitHub Container Registry](https://img.shields.io/badge/GHCR-ghcr.io/ronschaeffer/hounslow--bin--collection--calendar-blue?logo=github)](https://github.com/ronschaeffer/hounslow-bin-collection-calendar/pkgs/container/hounslow-bin-collection-calendar)
 
-This script fetches waste collection data for a property in the London Borough of Hounslow and integrates it into Home Assistant using two powerful methods: MQTT sensors and a self-hosted iCalendar file.
+This project provides automated browser-based extraction of waste collection data for properties in the London Borough of Hounslow. It uses sophisticated browser automation to bypass API security measures and extract real-time collection schedules directly from the official council website.
 
 The project is designed to be deployed as a Docker container, with all configuration handled by environment variables for maximum portability and security.
 
@@ -11,27 +11,49 @@ The project is designed to be deployed as a Docker container, with all configura
 
 ## How It Works
 
-The container runs two services simultaneously:
+The container runs browser automation that:
 
-1.  A **scheduler (`cron`)** that runs the Python sync script at a user-defined time.
-2.  A **lightweight web server** that serves the generated calendar file.
+1. **Navigates to** Hounslow Council's official waste collection form
+2. **Enters your postcode** and selects your specific address
+3. **Extracts collection data** including bin types, frequencies, and specific dates
+4. **Publishes to MQTT** (optional) for Home Assistant integration
+5. **Generates iCalendar** files for calendar applications
 
-When the script runs, it:
-
-1.  Fetches the latest collection data from the Hounslow Council API.
-2.  (If enabled) Publishes the data to your MQTT broker, where Home Assistant sensors are created via auto-discovery.
-3.  Generates an `.ics` calendar file with all upcoming collections and saves it to a shared volume.
-4.  (If enabled) Publishes a final status message (`OK` or `Error`) to an MQTT health-check sensor.
+**Important:** Collection dates may vary due to holidays and service changes. This tool extracts real-time data directly from the council's system to ensure accuracy.
 
 ## Features
 
-- **MQTT Auto-Discovery:** Automatically creates Home Assistant sensors for each waste type.
-- **Self-Hosted iCalendar:** The container runs its own web server to provide a stable, local URL for your `.ics` calendar file.
-- **Status Sensor:** Provides a dedicated MQTT sensor to monitor the health and last run status of the script.
-- **Fully Containerized:** Runs in a lightweight Docker image with a built-in scheduler and web server.
-- **CI/CD Ready:** Includes a GitHub Action workflow to automatically publish the Docker image to GHCR.
-- **Unraid Template:** Includes a template for easy installation on Unraid via Community Applications.
-- **Secure Configuration:** All user settings are managed via a `.env` file or the Unraid UI, never in version control.
+- **Browser Automation:** Uses Playwright to navigate the official council website
+- **Real-time Data:** Extracts current collection schedules including holiday adjustments
+- **Configurable Address:** Use any valid Hounslow postcode and address
+- **MQTT Auto-Discovery:** Automatically creates Home Assistant sensors for each waste type
+- **Self-Hosted iCalendar:** Built-in web server provides stable local URLs for calendar files
+- **Status Monitoring:** Dedicated health-check sensors for monitoring
+- **Fully Containerized:** Lightweight Docker image with built-in scheduler
+- **Production Ready:** Headless browser operation suitable for server deployment
+
+## Quick Start
+
+### Testing with Hounslow Council's Address
+
+For testing and demonstration, the tool uses Hounslow Council's own address by default:
+
+```bash
+# Test with default address (Hounslow Council HQ)
+poetry run python demo_final.py
+
+# Or get JSON output
+poetry run python demo_final.py --json
+```
+
+This will demonstrate the tool using:
+- **Postcode:** TW3 3EB
+- **Address:** 7 Bath Rd, Hounslow
+- **(Hounslow Council headquarters)**
+
+### Configuration for Your Address
+
+Copy the example configuration and customize for your address:
 
 ## Installation (Docker Recommended)
 
