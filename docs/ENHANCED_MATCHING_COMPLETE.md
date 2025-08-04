@@ -7,18 +7,21 @@ The Hounslow Bin Collection system now includes enhanced address matching capabi
 ## 🔥 **What We've Achieved**
 
 ### ✅ **Enhanced Matching Logic**
+
 - **Automatic abbreviation expansion**: `Rd → Road`, `St → Street`, `Ave → Avenue`, etc.
 - **Partial address matching**: House numbers, street names only
 - **Case-insensitive matching**: Handles different capitalization
 - **Confidence scoring**: Selects best matches based on accuracy
 
 ### ✅ **Production Integration**
+
 - Enhanced matching integrated into main `BrowserWasteCollector` class
 - Backwards compatible with existing code
 - Comprehensive error handling and logging
 - Manual verification guidance included
 
 ### ✅ **Real-World Testing**
+
 Test results show the enhanced matching successfully handles:
 
 ```bash
@@ -38,6 +41,7 @@ Test results show the enhanced matching successfully handles:
 ## 🧠 **How Enhanced Matching Works**
 
 ### **Address Normalization Function**
+
 ```python
 def normalize_address_for_matching(user_address: str) -> list[str]:
     """Generate multiple variations of an address for better matching."""
@@ -58,6 +62,7 @@ def normalize_address_for_matching(user_address: str) -> list[str]:
 ```
 
 ### **Smart Selection Logic**
+
 ```python
 # Enhanced matching with confidence scoring
 for option in address_options:
@@ -72,6 +77,7 @@ for option in address_options:
 ## 🚀 **Usage Examples**
 
 ### **Basic Usage (Enhanced Automatically)**
+
 ```python
 from hounslow_bin_collection.browser_collector import BrowserWasteCollector
 
@@ -83,6 +89,7 @@ with BrowserWasteCollector(headless=True) as collector:
 ```
 
 ### **Demo Scripts**
+
 ```bash
 # Test enhanced matching capabilities
 poetry run python demo_enhanced.py --enhanced
@@ -97,15 +104,18 @@ poetry run python demo_enhanced.py --json
 ## 🛡️ **Reliability & Manual Verification**
 
 ### **Built-in Guidance**
+
 - Enhanced matching includes automatic fallback to manual verification
 - Clear logging shows which variations were tried and selected
 - Confidence scoring helps select best matches
 
 ### **Manual Verification URL**
+
 For 100% accuracy, users can always verify addresses manually at:
 **https://my.hounslow.gov.uk/service/Waste_and_recycling_collections**
 
 ### **Error Handling**
+
 ```python
 if best_match:
     selected_option = best_match
@@ -118,11 +128,13 @@ else:
 ## 📊 **Performance Results**
 
 ### **Before Enhanced Matching**
+
 - Required exact address matches from council dropdown
 - "Bath Rd" would fail to match "Bath Road" addresses
 - Users had to manually check council website for exact formatting
 
 ### **After Enhanced Matching**
+
 - Automatically handles 14+ common abbreviations
 - "Bath Rd" successfully matches "Bath Road" addresses
 - Confidence scoring selects best available match
@@ -139,6 +151,7 @@ else:
 ## 🔄 **Integration Status**
 
 ### ✅ **Complete**
+
 - [x] Enhanced matching logic implemented
 - [x] Integrated into main `BrowserWasteCollector` class
 - [x] Comprehensive testing with real Hounslow addresses

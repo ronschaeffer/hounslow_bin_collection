@@ -47,6 +47,7 @@ poetry run python demo_final.py --json
 ```
 
 This will demonstrate the tool using:
+
 - **Postcode:** TW3 3EB
 - **Address:** 7 Bath Rd, Hounslow
 - **(Hounslow Council headquarters)**
@@ -58,12 +59,14 @@ This will demonstrate the tool using:
 This tool includes **smart address matching** that automatically handles common address variations:
 
 ✅ **Automatically handles:**
+
 - **Abbreviations:** `Rd` → `Road`, `St` → `Street`, `Ave` → `Avenue`, etc.
 - **Partial addresses:** House numbers, street names only
 - **Case variations:** Different capitalization patterns
 - **Building names:** Libraries, council buildings, schools
 
 ✅ **Examples that work:**
+
 ```bash
 "7 Bath Rd"           → Matches "7 Bath Road"
 "136 Worple Rd"       → Matches "136 Worple Road"
@@ -86,6 +89,7 @@ This tool includes **smart address matching** that automatically handles common 
 You can configure your address in multiple ways:
 
 #### Option 1: Environment Variables (Recommended for Docker)
+
 ```bash
 # In your .env file or Docker environment
 HOUNSLOW_POSTCODE=TW3 3EB
@@ -93,6 +97,7 @@ HOUNSLOW_ADDRESS=7 Bath Rd
 ```
 
 #### Option 2: Configuration File
+
 ```yaml
 # In config/config.yaml
 address:
@@ -101,6 +106,7 @@ address:
 ```
 
 #### Option 3: Direct Code Usage
+
 ```python
 from hounslow_bin_collection.browser_collector import BrowserWasteCollector
 
@@ -159,19 +165,19 @@ The script generates an `.ics` file and serves it locally.
 
 ## Configuration Variables
 
-| Variable             | Description                                                                | Required                    | Default Value | Example |
-| -------------------- | -------------------------------------------------------------------------- | --------------------------- | ------------- | ------- |
-| `UPRN`               | Your Unique Property Reference Number (for waste_sync.py - API blocked).  | **Legacy**                  | `None`        | `100021577775` |
-| `HOUNSLOW_POSTCODE`  | Your postcode for browser automation address lookup.                      | **Yes** (browser method)    | `None`        | `TW3 3EB` |
-| `HOUNSLOW_ADDRESS`   | Your address hint for enhanced browser matching.                          | **Yes** (browser method)    | `None`        | `7 Bath Rd` |
-| `CRON_SCHEDULE`      | The `cron` schedule for running the sync.                                 | No                          | `50 2 * * *`  | `0 6 * * *` |
-| `TZ`                 | Your local timezone (e.g., `Europe/London`).                              | No                          | `None`        | `Europe/London` |
-| `ICS_PORT`           | The **host port** for the built-in web server that serves the `.ics` file.| No                          | `8208`        | `8080` |
-| `MQTT_ENABLED`       | Set to `true` to enable creating Home Assistant sensors via MQTT.         | No                          | `true`        | `false` |
-| `MQTT_BROKER`        | IP address or hostname of your MQTT broker.                               | **If MQTT_ENABLED is true** | `None`        | `192.168.1.100` |
-| `MQTT_PORT`          | The port for your MQTT broker.                                            | No                          | `1883`        | `1883` |
-| `MQTT_USERNAME`      | Your MQTT username.                                                       | No                          | `None`        | `homeassistant` |
-| `MQTT_PASSWORD`      | Your MQTT password.                                                       | No                          | `None`        | `secret123` |
+| Variable            | Description                                                                | Required                    | Default Value | Example         |
+| ------------------- | -------------------------------------------------------------------------- | --------------------------- | ------------- | --------------- |
+| `UPRN`              | Your Unique Property Reference Number (for waste_sync.py - API blocked).   | **Legacy**                  | `None`        | `100021577775`  |
+| `HOUNSLOW_POSTCODE` | Your postcode for browser automation address lookup.                       | **Yes** (browser method)    | `None`        | `TW3 3EB`       |
+| `HOUNSLOW_ADDRESS`  | Your address hint for enhanced browser matching.                           | **Yes** (browser method)    | `None`        | `7 Bath Rd`     |
+| `CRON_SCHEDULE`     | The `cron` schedule for running the sync.                                  | No                          | `50 2 * * *`  | `0 6 * * *`     |
+| `TZ`                | Your local timezone (e.g., `Europe/London`).                               | No                          | `None`        | `Europe/London` |
+| `ICS_PORT`          | The **host port** for the built-in web server that serves the `.ics` file. | No                          | `8208`        | `8080`          |
+| `MQTT_ENABLED`      | Set to `true` to enable creating Home Assistant sensors via MQTT.          | No                          | `true`        | `false`         |
+| `MQTT_BROKER`       | IP address or hostname of your MQTT broker.                                | **If MQTT_ENABLED is true** | `None`        | `192.168.1.100` |
+| `MQTT_PORT`         | The port for your MQTT broker.                                             | No                          | `1883`        | `1883`          |
+| `MQTT_USERNAME`     | Your MQTT username.                                                        | No                          | `None`        | `homeassistant` |
+| `MQTT_PASSWORD`     | Your MQTT password.                                                        | No                          | `None`        | `secret123`     |
 
 ### Address Configuration Notes
 

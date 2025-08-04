@@ -7,6 +7,7 @@ You were absolutely correct! The `UPRN` environment variable is **not used by th
 ## 🎯 **Two Separate Systems**
 
 ### **1. Browser Automation (WORKING ✅)**
+
 - **File**: `browser_collector.py`
 - **Method**: Browser automation with Playwright
 - **Environment Variables**: `HOUNSLOW_POSTCODE` + `HOUNSLOW_ADDRESS`
@@ -14,6 +15,7 @@ You were absolutely correct! The `UPRN` environment variable is **not used by th
 - **Use Case**: Real-time data collection from council website
 
 ### **2. Direct API (BLOCKED ❌)**
+
 - **File**: `waste_sync.py`
 - **Method**: Direct HTTP API calls
 - **Environment Variable**: `UPRN`
@@ -23,6 +25,7 @@ You were absolutely correct! The `UPRN` environment variable is **not used by th
 ## 🚨 **Key Findings**
 
 ### **UPRN Environment Variable Reality**
+
 ```bash
 # This is ONLY used by waste_sync.py (which is blocked)
 export UPRN=100021577775
@@ -33,6 +36,7 @@ export HOUNSLOW_ADDRESS=7 Bath Rd
 ```
 
 ### **What Actually Works**
+
 1. **Browser collector** uses postcode + address hint
 2. **Browser collector** discovers the UPRN automatically from the council website
 3. **Enhanced matching** handles address abbreviations automatically
@@ -41,6 +45,7 @@ export HOUNSLOW_ADDRESS=7 Bath Rd
 ## 📋 **Updated Recommendations**
 
 ### **For Production (Docker/Home Assistant)**
+
 ```yaml
 environment:
   # WORKING METHOD
@@ -52,6 +57,7 @@ environment:
 ```
 
 ### **For Development**
+
 ```bash
 # Use browser automation
 export HOUNSLOW_POSTCODE="TW3 3EB"
@@ -90,18 +96,21 @@ The browser collector **automatically discovers** the UPRN:
 ## ✅ **Corrected Documentation**
 
 ### **Environment Variables (Updated)**
-| Variable             | Used By           | Status   | Purpose |
-|---------------------|------------------|----------|---------|
-| `HOUNSLOW_POSTCODE` | browser_collector.py | ✅ WORKING | Address lookup |
-| `HOUNSLOW_ADDRESS`  | browser_collector.py | ✅ WORKING | Enhanced matching |
-| `UPRN`              | waste_sync.py    | ❌ BLOCKED | Direct API (legacy) |
+
+| Variable            | Used By              | Status     | Purpose             |
+| ------------------- | -------------------- | ---------- | ------------------- |
+| `HOUNSLOW_POSTCODE` | browser_collector.py | ✅ WORKING | Address lookup      |
+| `HOUNSLOW_ADDRESS`  | browser_collector.py | ✅ WORKING | Enhanced matching   |
+| `UPRN`              | waste_sync.py        | ❌ BLOCKED | Direct API (legacy) |
 
 ### **Recommendations (Updated)**
+
 - ✅ **Use**: Browser automation with postcode + address
 - ❌ **Don't use**: UPRN environment variable for browser automation
 - 🎯 **Best practice**: Let browser collector discover UPRN automatically
 
 ## 🔗 **Manual Verification Still Works**
+
 For 100% accuracy: https://my.hounslow.gov.uk/service/Waste_and_recycling_collections
 
 ---

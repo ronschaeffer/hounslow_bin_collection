@@ -7,15 +7,18 @@ When using the Hounslow bin collection browser automation, please be aware that 
 ### Factors That Affect Collection Dates:
 
 1. **Bank Holidays & Public Holidays**
+
    - Collections may be delayed by 1-2 days
    - Christmas/New Year periods often have modified schedules
 
 2. **Service Disruptions**
+
    - Weather conditions (snow, flooding)
    - Vehicle breakdowns or staffing issues
    - Road closures or traffic disruptions
 
 3. **Operational Changes**
+
    - Route optimizations
    - Seasonal schedule adjustments
    - Service improvements or modifications
@@ -27,12 +30,14 @@ When using the Hounslow bin collection browser automation, please be aware that 
 ### Best Practices:
 
 ✅ **DO:**
+
 - Use only the specific dates provided by the council system
 - Check the council website regularly for any service updates
 - Set up notifications from Hounslow Council for collection changes
 - Keep an eye on local council communications
 
 ❌ **DON'T:**
+
 - Predict or calculate future collection dates beyond those shown
 - Assume regular weekly/fortnightly patterns will always hold
 - Rely solely on automated data without checking for updates
@@ -66,4 +71,4 @@ print(result['collections'])
 
 ---
 
-*This automation tool provides a convenient way to access collection data, but the responsibility for staying informed about any changes remains with the user.*
+_This automation tool provides a convenient way to access collection data, but the responsibility for staying informed about any changes remains with the user._

@@ -10,9 +10,9 @@ app:
 # Option 1: Use UPRN if known (fastest, most reliable)
 # Option 2: Use postcode + address_hint with enhanced browser automation
 address:
-  postcode: "TW3 3EB"    # Your postcode
-  address_hint: "7 Bath Rd"  # Address hint for enhanced matching
-  uprn: null             # Your UPRN if known (overrides postcode/address)
+  postcode: "TW3 3EB" # Your postcode
+  address_hint: "7 Bath Rd" # Address hint for enhanced matching
+  uprn: null # Your UPRN if known (overrides postcode/address)
 
 # Enhanced address matching automatically handles:
 # - Abbreviations: Rd → Road, St → Street, Ave → Avenue, etc.
@@ -31,23 +31,23 @@ default_test:
 production_examples:
   example_1:
     postcode: "TW7 7HX"
-    address_hint: "136 Worple Rd"  # Abbreviated street name
+    address_hint: "136 Worple Rd" # Abbreviated street name
   example_2:
     postcode: "TW3 3EB"
-    address_hint: "Bath Road"      # Street name only
+    address_hint: "Bath Road" # Street name only
   example_3:
-    uprn: "100021577775"           # Direct UPRN (fastest)
+    uprn: "100021577775" # Direct UPRN (fastest)
 
 logging:
   level: "INFO"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-  file: null  # Set to a filename to log to file
+  file: null # Set to a filename to log to file
 
 # Browser automation settings
 browser:
-  headless: true          # Run browser in headless mode (recommended for production)
-  timeout: 30000         # Timeout in milliseconds for browser operations
-  screenshot_on_error: true  # Save screenshots when errors occur
+  headless: true # Run browser in headless mode (recommended for production)
+  timeout: 30000 # Timeout in milliseconds for browser operations
+  screenshot_on_error: true # Save screenshots when errors occur
 
 # Add your configuration sections here
 settings:
@@ -58,5 +58,5 @@ settings:
 # Rate limiting (to be respectful to the council website)
 rate_limiting:
   enabled: true
-  min_delay_seconds: 5    # Minimum delay between requests
-  max_requests_per_hour: 10  # Maximum requests per hour
+  min_delay_seconds: 5 # Minimum delay between requests
+  max_requests_per_hour: 10 # Maximum requests per hour

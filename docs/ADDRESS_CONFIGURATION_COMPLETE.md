@@ -24,7 +24,7 @@ export UPRN="100021577775"
 address:
   postcode: "TW3 3EB"
   address_hint: "7 Bath Rd"
-  uprn: null  # Set this to override postcode/address
+  uprn: null # Set this to override postcode/address
 ```
 
 ### **Method 3: Direct Code Usage**
@@ -41,11 +41,13 @@ with BrowserWasteCollector() as collector:
 The system automatically handles common address variations:
 
 ✅ **Smart Abbreviation Expansion:**
+
 - `Rd` → `Road`, `St` → `Street`, `Ave` → `Avenue`
 - `Ln` → `Lane`, `Cl` → `Close`, `Cres` → `Crescent`
 - `Dr` → `Drive`, `Pk` → `Park`, `Pl` → `Place`
 
 ✅ **Flexible Input Formats:**
+
 - `"7 Bath Rd"` → Matches `"7 Bath Road, Hounslow"`
 - `"136 Worple Rd"` → Matches `"136 Worple Road, Isleworth"`
 - `"Bath Road"` → Matches any address on Bath Road
@@ -55,6 +57,7 @@ The system automatically handles common address variations:
 ## 🐳 **Docker & Production Usage**
 
 ### **Docker Compose**
+
 ```yaml
 services:
   hounslow-bin-collection:
@@ -67,6 +70,7 @@ services:
 ```
 
 ### **Environment File (.env)**
+
 ```bash
 # Address configuration
 HOUNSLOW_POSTCODE=TW3 3EB
@@ -83,7 +87,9 @@ MQTT_ENABLED=true
 ## 🏡 **Home Assistant Integration**
 
 ### **Automatic Sensor Discovery**
+
 When `MQTT_ENABLED=true`, sensors appear automatically:
+
 - `sensor.hounslow_refuse`
 - `sensor.hounslow_recycling`
 - `sensor.hounslow_food_waste`
@@ -91,36 +97,40 @@ When `MQTT_ENABLED=true`, sensors appear automatically:
 - `sensor.hounslow_bin_collection_status`
 
 ### **iCalendar Integration**
+
 Access your calendar at: `http://YOUR_SERVER_IP:8208/waste_calendar.ics`
 
 ## 📋 **Configuration Variables Reference**
 
-| Variable             | Description                           | Required | Example               |
-|---------------------|---------------------------------------|----------|-----------------------|
-| `HOUNSLOW_POSTCODE` | Your postcode for address lookup     | Yes*     | `TW3 3EB`            |
-| `HOUNSLOW_ADDRESS`  | Address hint for enhanced matching   | Yes*     | `7 Bath Rd`          |
-| `UPRN`              | Direct UPRN (overrides postcode)     | Yes*     | `100021577775`       |
-| `MQTT_ENABLED`      | Enable MQTT sensors                   | No       | `true`               |
-| `MQTT_BROKER`       | MQTT broker IP/hostname               | No**     | `192.168.1.100`     |
-| `CRON_SCHEDULE`     | Collection sync schedule              | No       | `50 2 * * *`         |
-| `ICS_PORT`          | Calendar web server port              | No       | `8208`               |
+| Variable            | Description                        | Required | Example         |
+| ------------------- | ---------------------------------- | -------- | --------------- |
+| `HOUNSLOW_POSTCODE` | Your postcode for address lookup   | Yes\*    | `TW3 3EB`       |
+| `HOUNSLOW_ADDRESS`  | Address hint for enhanced matching | Yes\*    | `7 Bath Rd`     |
+| `UPRN`              | Direct UPRN (overrides postcode)   | Yes\*    | `100021577775`  |
+| `MQTT_ENABLED`      | Enable MQTT sensors                | No       | `true`          |
+| `MQTT_BROKER`       | MQTT broker IP/hostname            | No\*\*   | `192.168.1.100` |
+| `CRON_SCHEDULE`     | Collection sync schedule           | No       | `50 2 * * *`    |
+| `ICS_PORT`          | Calendar web server port           | No       | `8208`          |
 
-*One method required: Either `UPRN` OR (`HOUNSLOW_POSTCODE` + `HOUNSLOW_ADDRESS`)
-**Required if `MQTT_ENABLED=true`
+\*One method required: Either `UPRN` OR (`HOUNSLOW_POSTCODE` + `HOUNSLOW_ADDRESS`)
+\*\*Required if `MQTT_ENABLED=true`
 
 ## 🧪 **Testing & Validation**
 
 ### **Test Environment Variable Configuration**
+
 ```bash
 poetry run python test_env_config.py
 ```
 
 ### **Test Enhanced Address Matching**
+
 ```bash
 poetry run python demo_env_vars.py
 ```
 
 ### **Test Address Matching Flexibility**
+
 ```bash
 poetry run python test_address_matching.py
 ```
@@ -137,6 +147,7 @@ For 100% accuracy, verify your exact address at:
 ## 💡 **Best Practices**
 
 ### **For Development:**
+
 ```bash
 # Use environment variables
 export HOUNSLOW_POSTCODE="TW3 3EB"
@@ -147,6 +158,7 @@ poetry run python waste_sync.py
 ```
 
 ### **For Production (Docker):**
+
 ```bash
 # Use .env file or docker environment
 docker run -e HOUNSLOW_POSTCODE="your_postcode" \
@@ -156,6 +168,7 @@ docker run -e HOUNSLOW_POSTCODE="your_postcode" \
 ```
 
 ### **For Home Assistant:**
+
 ```yaml
 # docker-compose.yml
 environment:
