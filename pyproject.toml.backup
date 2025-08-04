@@ -2,14 +2,15 @@
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry]
+[project]
 name = "hounslow_bin_collection"
 version = "0.1.0"
 description = "Grab bin collection dates from the Hounslow Council website and make them available via MQTT and ICS for Home Assistant or elsewhere"
-authors = ["ronschaeffer <ron@ronschaeffer.com>"]
+authors = [{name = "ronschaeffer", email = "ron@ronschaeffer.com"}]
+requires-python = ">=3.11"
 readme = "README.md"
-license = "MIT"
-keywords = ["python", "hounslow", "bin-collection", "home-assistant", "mqtt"]
+license = {text = "MIT"}
+keywords = ["python"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -18,25 +19,31 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-packages = [{include = "hounslow_bin_collection", from = "src"}]
 
-[tool.poetry.urls]
+dependencies = [
+    "pyyaml>=6.0",
+    "requests>=2.31.0",
+    "ics>=0.7.2",
+    "paho-mqtt>=1.6.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.12",
+    "pytest>=8.0",
+    "pytest-cov>=4.0",
+]
+
+[project.urls]
 Homepage = "https://github.com/ronschaeffer/hounslow_bin_collection"
 Repository = "https://github.com/ronschaeffer/hounslow_bin_collection.git"
 Issues = "https://github.com/ronschaeffer/hounslow_bin_collection/issues"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-pyyaml = "^6.0"
-requests = "^2.31.0"
-ics = "^0.7.2"
-paho-mqtt = "^1.6.1"
+[tool.setuptools.packages.find]
+where = ["src"]
 
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.12"
-pytest = "^8.0"
-pytest-cov = "^4.0"
-pre-commit = "^4.2.0"
+[tool.setuptools.package-data]
+"hounslow_bin_collection" = ["py.typed"]
 
 [tool.ruff]
 line-length = 88
@@ -95,3 +102,6 @@ exclude_lines = [
     "if 0:",
     "if __name__ == .__main__.:",
 ]
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^4.2.0"

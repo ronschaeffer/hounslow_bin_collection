@@ -1,7 +1,8 @@
 """Pytest configuration and fixtures."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture
@@ -13,11 +14,7 @@ def temp_dir(tmp_path):
 @pytest.fixture
 def sample_data():
     """Provide sample data for tests."""
-    return {
-        "name": "test",
-        "value": 42,
-        "items": ["a", "b", "c"]
-    }
+    return {"name": "test", "value": 42, "items": ["a", "b", "c"]}
 
 
 @pytest.fixture

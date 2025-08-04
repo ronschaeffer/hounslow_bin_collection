@@ -1,7 +1,6 @@
 """Tests for hounslow_bin_collection package."""
 
-import pytest
-from src.hounslow_bin_collection import __version__, __author__
+from src.hounslow_bin_collection import __author__, __version__
 
 
 def test_version():
@@ -17,16 +16,17 @@ def test_author():
 def test_package_import():
     """Test that package can be imported."""
     import src.hounslow_bin_collection
+
     assert src.hounslow_bin_collection is not None
 
 
 class TestHounslow_bin_collection:
     """Test class for hounslow_bin_collection functionality."""
-    
+
     def test_placeholder(self):
         """Placeholder test - replace with actual tests."""
         assert True
-        
+
     def test_with_fixture(self, sample_data):
         """Test using a fixture."""
         assert sample_data["name"] == "test"
