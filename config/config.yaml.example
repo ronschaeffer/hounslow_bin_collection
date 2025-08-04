@@ -7,7 +7,6 @@
 # You can also set these via environment variables:
 # - HOUNSLOW_POSTCODE="TW7 4QQ"
 # - HOUNSLOW_ADDRESS="123 Your Street"
-# - UPRN="your_uprn_here"
 
 # ===================================================================
 # APPLICATION SETTINGS
@@ -20,28 +19,16 @@ app:
 # ===================================================================
 # YOUR ADDRESS CONFIGURATION
 # ===================================================================
-# Choose ONE of these methods:
-#
-# Method 1: UPRN (Unique Property Reference Number) - FASTEST & MOST RELIABLE
-# If you know your UPRN, this is the most direct method
-# Find your UPRN: https://www.findmyaddress.co.uk/
-#
-# Method 2: Postcode + Address - SMART MATCHING
+# Configure your address for bin collection lookup:
 # Uses enhanced browser automation with intelligent address matching
 
 address:
-  # Your postcode (required for Method 2)
+  # Your postcode (required)
   postcode: "TW3 3EB"
 
-  # Your address hint (required for Method 2)
+  # Your address hint (required)
   # Can be partial - the system will find the best match
-  address_hint: "7 Bath Rd"
-
-  # Your UPRN (optional - if provided, overrides postcode/address)
-  # Example: uprn: "100021577775"
-  uprn: null
-
-# ===================================================================
+  address_hint: "7 Bath Rd"# ===================================================================
 # SMART ADDRESS MATCHING INFO
 # ===================================================================
 # The enhanced address matching system automatically handles:
@@ -76,18 +63,17 @@ examples:
     address_hint: "Bath Road"
     description: "Street name only - system finds house number"
 
-  # Example 3: Using UPRN (fastest method)
-  direct_uprn:
-    uprn: "100021577775"
-    description: "Direct UPRN lookup - bypasses address matching"
-
-  # Example 4: Building/landmark name
+  # Example 3: Building/landmark name
   landmark_building:
     postcode: "TW3 1ES"
     address_hint: "Hounslow Library"
     description: "Building name - system handles full address"
 
-# ===================================================================
+  # Example 4: Flat/apartment address
+  flat_address:
+    postcode: "TW4 6JH"
+    address_hint: "Flat 12A High Street"
+    description: "Apartment with unit number"# ===================================================================
 # LOGGING CONFIGURATION
 # ===================================================================
 logging:
