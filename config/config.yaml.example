@@ -6,16 +6,37 @@ app:
   version: "0.1.0"
   debug: false
 
+# Address configuration
+# Option 1: Use UPRN if known (fastest, most reliable)
+# Option 2: Use postcode + address_hint with enhanced browser automation
+address:
+  postcode: "TW3 3EB"    # Your postcode
+  address_hint: "7 Bath Rd"  # Address hint for enhanced matching
+  uprn: null             # Your UPRN if known (overrides postcode/address)
+
+# Enhanced address matching automatically handles:
+# - Abbreviations: Rd → Road, St → Street, Ave → Avenue, etc.
+# - Partial addresses: house numbers, street names only
+# - Case variations and formatting differences
+#
+# For manual verification: https://my.hounslow.gov.uk/service/Waste_and_recycling_collections
+
 # Default test address (Hounslow Council headquarters)
 default_test:
   postcode: "TW3 3EB"
   address: "7 Bath Rd"
   description: "Hounslow Council headquarters - used for testing and examples"
 
-# Production configuration - customize these values
-production:
-  postcode: ""  # Your postcode (e.g., "TW3 4XX")
-  address: ""   # Part of your address to match (e.g., "123 Your Street")
+# Production configuration examples
+production_examples:
+  example_1:
+    postcode: "TW7 7HX"
+    address_hint: "136 Worple Rd"  # Abbreviated street name
+  example_2:
+    postcode: "TW3 3EB"
+    address_hint: "Bath Road"      # Street name only
+  example_3:
+    uprn: "100021577775"           # Direct UPRN (fastest)
 
 logging:
   level: "INFO"

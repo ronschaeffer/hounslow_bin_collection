@@ -1,5 +1,6 @@
 """Configuration management for hounslow_bin_collection."""
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,7 @@ class Config:
 
         self.config_path = Path(config_path)
         self._config: dict[str, Any] = self._load_config()
+        self._apply_env_overrides()
 
     def _load_config(self) -> dict[str, Any]:
         """Load configuration from file."""
@@ -54,7 +56,25 @@ class Config:
                 "retry_count": 3,
                 "batch_size": 100,
             },
+            "address": {
+                "postcode": None,
+                "address_hint": None,
+                "uprn": None,
+            },
         }
+
+    def _apply_env_overrides(self) -> None:
+        """Apply environment variable overrides to configuration."""
+        env_mappings = {
+            "HOUNSLOW_POSTCODE": "address.postcode",
+            "HOUNSLOW_ADDRESS": "address.address_hint",
+            "UPRN": "address.uprn",
+        }
+
+        for env_var, config_key in env_mappings.items():
+            env_value = os.getenv(env_var)
+            if env_value:
+                self.set(config_key, env_value)
 
     def get(self, key: str, default: Any = None) -> Any:
         """Get configuration value by dot-notation key.

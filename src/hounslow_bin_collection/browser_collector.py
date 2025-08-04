@@ -15,6 +15,56 @@ from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
 logger = logging.getLogger(__name__)
 
 
+def normalize_address_for_matching(user_address: str) -> list[str]:
+    """
+    Generate multiple variations of an address for better matching.
+
+    Args:
+        user_address: The address provided by user
+
+    Returns:
+        List of address variations to try
+    """
+    variations = [user_address]  # Always include original
+
+    # Common abbreviation expansions
+    expansions = {
+        "rd": "road",
+        "st": "street",
+        "ave": "avenue",
+        "ln": "lane",
+        "cl": "close",
+        "cres": "crescent",
+        "gdns": "gardens",
+        "pk": "park",
+        "pl": "place",
+        "sq": "square",
+        "ter": "terrace",
+        "way": "way",
+        "dr": "drive",
+        "ct": "court",
+    }
+
+    # Try expanding abbreviations
+    lower_address = user_address.lower()
+    for abbrev, full in expansions.items():
+        if f" {abbrev}" in lower_address or lower_address.endswith(f" {abbrev}"):
+            expanded = lower_address.replace(f" {abbrev}", f" {full}")
+            variations.append(expanded.title())
+
+    # Try just the house number if present
+    words = user_address.split()
+    if words and words[0].replace("a", "").replace("b", "").replace("c", "").isdigit():
+        variations.append(words[0])
+
+    # Try just the street name (remove house number)
+    if len(words) > 1:
+        street_only = " ".join(words[1:])
+        variations.append(street_only)
+
+    return list(set(variations))  # Remove duplicates
+
+
 class BrowserWasteCollector:
     """Browser automation-based waste collection data retriever."""
 
@@ -71,7 +121,9 @@ class BrowserWasteCollector:
 
         Args:
             postcode: The postcode to search for
-            address_hint: Optional specific address to look for in the dropdown
+            address_hint: Optional specific address to look for in the dropdown.
+                         For best results, check the exact format at:
+                         https://my.hounslow.gov.uk/service/Waste_and_recycling_collections
 
         Returns:
             Dictionary containing collection schedule data
@@ -87,6 +139,9 @@ class BrowserWasteCollector:
         logger.info(f"Fetching collection data for postcode: {postcode}")
         if address_hint:
             logger.info(f"Looking for address: {address_hint}")
+            logger.debug(
+                "Tip: For best results, verify address format at https://my.hounslow.gov.uk/service/Waste_and_recycling_collections"
+            )
 
         try:
             # Navigate to the form
@@ -154,15 +209,41 @@ class BrowserWasteCollector:
             selected_option = None
             selected_value = None
             if address_hint:
-                # Look for specific address
+                # Generate variations of the address for better matching
+                address_variations = normalize_address_for_matching(address_hint)
+                logger.debug(f"Trying address variations: {address_variations}")
+
+                # Look for specific address using enhanced matching
+                best_match = None
+                best_match_confidence = 0
+
                 for option in options[1:]:  # Skip first option (usually placeholder)
                     option_text = option.text_content() or ""
-                    option_value = option.get_attribute("value")
-                    if address_hint.lower() in option_text.lower():
-                        selected_option = option
-                        selected_value = option_value
-                        logger.debug(f"Found matching address: {option_text}")
-                        break
+
+                    # Try each variation
+                    for variation in address_variations:
+                        if variation.lower() in option_text.lower():
+                            # Calculate confidence based on match length
+                            confidence = (
+                                len(variation) / len(option_text) if option_text else 0
+                            )
+                            if confidence > best_match_confidence:
+                                best_match = option
+                                best_match_confidence = confidence
+                                logger.debug(
+                                    f"Enhanced match found: '{variation}' in '{option_text}' (confidence: {confidence:.2f})"
+                                )
+
+                if best_match:
+                    selected_option = best_match
+                    selected_value = best_match.get_attribute("value")
+                    logger.info(
+                        f"Enhanced matching selected: {best_match.text_content()}"
+                    )
+                else:
+                    logger.warning(
+                        f"No enhanced match found for '{address_hint}'. Consider checking the exact address at https://my.hounslow.gov.uk/service/Waste_and_recycling_collections"
+                    )
 
             if not selected_option:
                 # Select the first real option

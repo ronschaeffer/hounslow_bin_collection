@@ -6,10 +6,7 @@ Final demonstration of the working Hounslow bin collection browser automation.
 import json
 import sys
 
-from src.hounslow_bin_collection.browser_collector import (
-    BrowserWasteCollector,
-    fetch_collection_data_browser,
-)
+from src.hounslow_bin_collection.browser_collector import fetch_collection_data_browser
 
 
 def demonstrate_enhanced_matching():
@@ -17,6 +14,8 @@ def demonstrate_enhanced_matching():
     print("\n🎯 Enhanced Address Matching Demo")
     print("=" * 50)
     print("Testing with different address formats...")
+
+    from src.hounslow_bin_collection.browser_collector import BrowserWasteCollector
 
     test_cases = [
         ("TW3 3EB", "7 Bath Rd", "Abbreviated street name"),
@@ -82,60 +81,53 @@ def test_final_solution():
         garden_waste = None
         next_dates = []
 
-        for item in collections:
-            text = item.get("text", "")
+        for collection in collections:
+            waste_type = collection.get("type", "Unknown")
+            collection_date = collection.get("date", "Unknown")
+            next_dates.append(f"{collection_date} ({waste_type})")
 
-            if "black wheelie bin" in text.lower() and "general waste" in text.lower():
-                general_waste = text
-            elif "recycling boxes" in text.lower():
-                recycling = text
-            elif "food waste bin" in text.lower():
-                food_waste = text
-            elif "brown wheelie bin" in text.lower() and "garden waste" in text.lower():
-                garden_waste = text
-            elif "every" in text.lower() and "tuesday" in text.lower():
-                frequency = text
-                print(f"📅 Schedule: {frequency}")
-            elif item.get("type") == "dates":
-                next_dates = item.get("dates", [])
+            if "general" in waste_type.lower() or "refuse" in waste_type.lower():
+                general_waste = collection_date
+            elif "recycling" in waste_type.lower():
+                recycling = collection_date
+            elif "food" in waste_type.lower():
+                food_waste = collection_date
+            elif "garden" in waste_type.lower():
+                garden_waste = collection_date
 
+        # Display specific collection types
         if general_waste:
-            print(f"🖤 {general_waste}")
+            print(f"🗑️  General Waste: {general_waste}")
         if recycling:
-            print(f"♻️  {recycling}")
+            print(f"♻️  Recycling: {recycling}")
         if food_waste:
-            print(f"🥬 {food_waste}")
+            print(f"🥬 Food Waste: {food_waste}")
         if garden_waste:
-            print(f"🌿 {garden_waste}")
-
-        if next_dates:
-            print()
-            print("📆 UPCOMING COLLECTION DATES:")
-            print("   ⚠️  Note: Dates may vary due to holidays/service changes")
-            for date in next_dates[:5]:  # Show next 5 dates
-                print(f"   • {date}")
+            print(f"🌿 Garden Waste: {garden_waste}")
 
         print()
-        print("=" * 60)
-        print("✅ SOLUTION COMPLETE!")
-        print("The browser automation successfully:")
-        print("  1. Navigated to Hounslow Council's waste collection form")
-        print("  2. Entered the postcode and triggered address lookup")
-        print("  3. Selected the correct address from the dropdown")
-        print("  4. Extracted detailed collection schedule information")
-        print("  5. Parsed collection types, frequencies, and dates")
-        print()
-        print("⚠️  IMPORTANT: Collection dates may vary due to holidays")
-        print("   and service changes. Only rely on dates shown by the")
-        print("   council system - do not predict future dates.")
-        print()
-        print("This solves the original API security bypass challenge!")
+        print("📅 NEXT COLLECTIONS:")
+        print("-" * 20)
+        for date_info in next_dates[:3]:  # Show next 3 collections
+            print(f"• {date_info}")
 
-        return result
+        print()
+        print("⚠️  IMPORTANT NOTES:")
+        print("- Collection dates may vary due to holidays")
+        print("- Always check official council website for latest updates")
+        print("- Place bins out before 7 AM on collection day")
+        print()
+        print("✨ Browser automation successfully bypassed all API restrictions!")
+        print(
+            "🔗 Manual verification: https://my.hounslow.gov.uk/service/Waste_and_recycling_collections"
+        )
 
     except Exception as e:
         print(f"❌ ERROR: {e}")
-        return None
+        print("Please check your postcode and address are valid.")
+        return False
+
+    return True
 
 
 def main():

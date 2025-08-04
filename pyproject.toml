@@ -15,6 +15,8 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
@@ -26,7 +28,7 @@ Repository = "https://github.com/ronschaeffer/hounslow_bin_collection.git"
 Issues = "https://github.com/ronschaeffer/hounslow_bin_collection/issues"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.9"
 pyyaml = "^6.0"
 requests = "^2.31.0"
 ics = "^0.7.2"
@@ -42,7 +44,7 @@ pre-commit = "^4.2.0"
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py39"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
@@ -57,6 +59,8 @@ select = [
 ]
 ignore = [
     "E501",  # line too long, handled by formatter
+    "UP007", # Use X | Y for union types (Python 3.10+)
+    "UP038", # Use X | Y for isinstance checks (Python 3.10+)
 ]
 
 [tool.ruff.lint.per-file-ignores]
