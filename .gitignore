@@ -59,8 +59,8 @@ env.bak/
 venv.bak/
 
 # IDEs
-.vscode/settings.json
 .vscode/launch.json
+!.vscode/settings.json  # Allow locale and basic project settings
 .idea/
 *.swp
 *.swo
