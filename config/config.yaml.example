@@ -1,62 +1,143 @@
-# Example configuration for hounslow_bin_collection
-# Copy this file to config.yaml and modify as needed
+# ===================================================================
+# Hounslow Bin Collection - Configuration Example
+# ===================================================================
+# Copy this file to config.yaml and modify with your address details
+#
+# Environment Variables Override:
+# You can also set these via environment variables:
+# - HOUNSLOW_POSTCODE="TW7 4QQ"
+# - HOUNSLOW_ADDRESS="123 Your Street"
+# - UPRN="your_uprn_here"
 
+# ===================================================================
+# APPLICATION SETTINGS
+# ===================================================================
 app:
   name: "hounslow_bin_collection"
   version: "0.1.0"
   debug: false
 
-# Address configuration
-# Option 1: Use UPRN if known (fastest, most reliable)
-# Option 2: Use postcode + address_hint with enhanced browser automation
-address:
-  postcode: "TW3 3EB" # Your postcode
-  address_hint: "7 Bath Rd" # Address hint for enhanced matching
-  uprn: null # Your UPRN if known (overrides postcode/address)
-
-# Enhanced address matching automatically handles:
-# - Abbreviations: Rd → Road, St → Street, Ave → Avenue, etc.
-# - Partial addresses: house numbers, street names only
-# - Case variations and formatting differences
+# ===================================================================
+# YOUR ADDRESS CONFIGURATION
+# ===================================================================
+# Choose ONE of these methods:
 #
-# For manual verification: https://my.hounslow.gov.uk/service/Waste_and_recycling_collections
+# Method 1: UPRN (Unique Property Reference Number) - FASTEST & MOST RELIABLE
+# If you know your UPRN, this is the most direct method
+# Find your UPRN: https://www.findmyaddress.co.uk/
+#
+# Method 2: Postcode + Address - SMART MATCHING
+# Uses enhanced browser automation with intelligent address matching
 
-# Default test address (Hounslow Council headquarters)
-default_test:
+address:
+  # Your postcode (required for Method 2)
   postcode: "TW3 3EB"
-  address: "7 Bath Rd"
-  description: "Hounslow Council headquarters - used for testing and examples"
 
-# Production configuration examples
-production_examples:
-  example_1:
+  # Your address hint (required for Method 2)
+  # Can be partial - the system will find the best match
+  address_hint: "7 Bath Rd"
+
+  # Your UPRN (optional - if provided, overrides postcode/address)
+  # Example: uprn: "100021577775"
+  uprn: null
+
+# ===================================================================
+# SMART ADDRESS MATCHING INFO
+# ===================================================================
+# The enhanced address matching system automatically handles:
+# ✅ Abbreviations: Rd → Road, St → Street, Ave → Avenue, etc.
+# ✅ Partial addresses: house numbers, street names only
+# ✅ Case variations and formatting differences
+# ✅ Building names: libraries, schools, council buildings
+#
+# Examples that work:
+# - "7 Bath Rd" → matches "7 Bath Road"
+# - "136 Worple Rd" → matches "136 Worple Road"
+# - "Bath Road" → matches "7 Bath Road" (if unique)
+# - "Hounslow Library" → matches "Centre Space Hounslow Library"
+#
+# Manual verification: https://my.hounslow.gov.uk/service/Waste_and_recycling_collections
+
+# ===================================================================
+# EXAMPLE CONFIGURATIONS
+# ===================================================================
+# Here are some real-world examples to help you configure your address:
+
+examples:
+  # Example 1: Using house number + abbreviated street name
+  residential_abbreviated:
     postcode: "TW7 7HX"
-    address_hint: "136 Worple Rd" # Abbreviated street name
-  example_2:
+    address_hint: "136 Worple Rd"
+    description: "Common format - house number with abbreviated street"
+
+  # Example 2: Using full street name only
+  street_name_only:
     postcode: "TW3 3EB"
-    address_hint: "Bath Road" # Street name only
-  example_3:
-    uprn: "100021577775" # Direct UPRN (fastest)
+    address_hint: "Bath Road"
+    description: "Street name only - system finds house number"
 
+  # Example 3: Using UPRN (fastest method)
+  direct_uprn:
+    uprn: "100021577775"
+    description: "Direct UPRN lookup - bypasses address matching"
+
+  # Example 4: Building/landmark name
+  landmark_building:
+    postcode: "TW3 1ES"
+    address_hint: "Hounslow Library"
+    description: "Building name - system handles full address"
+
+# ===================================================================
+# LOGGING CONFIGURATION
+# ===================================================================
 logging:
-  level: "INFO"
+  level: "INFO" # DEBUG, INFO, WARNING, ERROR
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-  file: null # Set to a filename to log to file
+  file: null # Set to filename to log to file (e.g., "hounslow_collection.log")
 
-# Browser automation settings
+# ===================================================================
+# BROWSER AUTOMATION SETTINGS
+# ===================================================================
 browser:
-  headless: true # Run browser in headless mode (recommended for production)
-  timeout: 30000 # Timeout in milliseconds for browser operations
-  screenshot_on_error: true # Save screenshots when errors occur
+  # Run browser in headless mode (no visible window)
+  headless: true
 
-# Add your configuration sections here
+  # Timeout for browser operations (milliseconds)
+  timeout: 30000
+
+  # Save screenshots when errors occur (helpful for debugging)
+  screenshot_on_error: true
+
+  # Browser viewport size
+  viewport:
+    width: 1280
+    height: 720
+
+# ===================================================================
+# APPLICATION BEHAVIOR
+# ===================================================================
 settings:
+  # General timeout for operations (seconds)
   timeout: 30
-  retry_count: 3
-  batch_size: 100
 
-# Rate limiting (to be respectful to the council website)
+  # Number of retry attempts for failed operations
+  retry_count: 3
+
+  # Batch processing size (for multiple addresses)
+  batch_size: 10
+
+# ===================================================================
+# RATE LIMITING (Be respectful to council servers)
+# ===================================================================
 rate_limiting:
+  # Enable rate limiting to avoid overwhelming the server
   enabled: true
-  min_delay_seconds: 5 # Minimum delay between requests
-  max_requests_per_hour: 10 # Maximum requests per hour
+
+  # Minimum delay between requests (seconds)
+  min_delay_seconds: 5
+
+  # Maximum requests per hour
+  max_requests_per_hour: 10
+
+  # Respect robots.txt and server load
+  respectful_mode: true
