@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Obsolete files directory
+.obsolete_files/
+
 # Distribution / packaging
 .Python
 build/
