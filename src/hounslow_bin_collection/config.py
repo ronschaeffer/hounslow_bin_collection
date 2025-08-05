@@ -59,7 +59,6 @@ class Config:
             "address": {
                 "postcode": None,
                 "address_hint": None,
-                "uprn": None,
             },
         }
 
@@ -68,7 +67,6 @@ class Config:
         env_mappings = {
             "HOUNSLOW_POSTCODE": "address.postcode",
             "HOUNSLOW_ADDRESS": "address.address_hint",
-            "UPRN": "address.uprn",
         }
 
         for env_var, config_key in env_mappings.items():

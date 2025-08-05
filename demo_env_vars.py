@@ -83,7 +83,7 @@ def demo_env_config_usage():
     print("   https://my.hounslow.gov.uk/service/Waste_and_recycling_collections")
 
     # Clean up
-    for env_var in ["HOUNSLOW_POSTCODE", "HOUNSLOW_ADDRESS", "UPRN"]:
+    for env_var in ["HOUNSLOW_POSTCODE", "HOUNSLOW_ADDRESS"]:
         if env_var in os.environ:
             del os.environ[env_var]
 
