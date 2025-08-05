@@ -9,3 +9,19 @@ updates:
       - "ronschaeffer"
     assignees:
       - "ronschaeffer"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "ronschaeffer"
+    assignees:
+      - "ronschaeffer"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
