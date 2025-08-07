@@ -12,6 +12,8 @@ from typing import Any
 
 from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
 
+from .enhanced_extractor import HounslowDataExtractor
+
 logger = logging.getLogger(__name__)
 
 
@@ -304,8 +306,9 @@ class BrowserWasteCollector:
             # Wait additional time for collection data to load
             iframe_frame.wait_for_timeout(8000)
 
-            # Extract collection data from the current page
-            collection_data = self._extract_collection_data_from_iframe(
+            # Extract collection data using enhanced extractor
+            extractor = HounslowDataExtractor()
+            collection_data = extractor.extract_enhanced_collection_data(
                 iframe_frame, postcode, option_text, uprn_value or selected_value or ""
             )
 
@@ -470,129 +473,6 @@ class BrowserWasteCollector:
 
         logger.debug(
             f"Extracted collection data with {len(collection_info.get('collections', []))} collection entries"
-        )
-        return collection_info
-        """Extract collection data from the results page.
-
-        Returns:
-            Dictionary containing extracted collection information
-        """
-        logger.debug("Extracting collection data from results page")
-
-        # Look for collection information on the page
-        collection_info = {
-            "uprn": None,
-            "address": None,
-            "collections": [],
-            "extracted_at": datetime.now().isoformat(),
-            "method": "browser_automation",
-        }
-
-        # Try to extract address information
-        address_selectors = [
-            ".address",
-            ".property-address",
-            '[class*="address"]',
-            "h1, h2, h3",
-            ".result-header",
-        ]
-
-        for selector in address_selectors:
-            try:
-                element = self.page.query_selector(selector)
-                if element:
-                    text = element.text_content()
-                    if text:
-                        text = text.strip()
-                        if text and len(text) > 5:  # Basic validation
-                            collection_info["address"] = text
-                            logger.debug(f"Found address: {text}")
-                            break
-            except Exception:
-                continue
-
-        # Extract collection dates
-        date_patterns = [
-            r"\b\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}\b",  # DD/MM/YYYY, DD-MM-YYYY, etc.
-            r"\b\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}\b",  # YYYY/MM/DD, etc.
-            r"\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b",  # Day names
-            r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2}\b",  # Month names
-        ]
-
-        # Look for collection information in various containers
-        content_selectors = [
-            ".collection-info",
-            ".bin-collection",
-            ".results",
-            ".content",
-            "main",
-            "body",
-        ]
-
-        page_content = ""
-        for selector in content_selectors:
-            try:
-                element = self.page.query_selector(selector)
-                if element:
-                    page_content = element.text_content()
-                    break
-            except Exception:
-                continue
-
-        if not page_content and self.page:
-            page_content = self.page.evaluate("() => document.body.textContent") or ""
-
-        # Ensure page_content is a string
-        if not page_content:
-            page_content = ""  # Look for specific collection types
-        collection_types = ["General Waste", "Recycling", "Garden Waste", "Food Waste"]
-
-        for collection_type in collection_types:
-            # Try to find dates associated with this collection type
-            lines = page_content.split("\n")
-            for i, line in enumerate(lines):
-                if collection_type.lower() in line.lower():
-                    # Look in surrounding lines for dates
-                    context_lines = lines[max(0, i - 2) : i + 3]
-                    context_text = " ".join(context_lines)
-
-                    import re
-
-                    for pattern in date_patterns:
-                        matches = re.findall(pattern, context_text, re.IGNORECASE)
-                        if matches:
-                            collection_info["collections"].append(
-                                {
-                                    "type": collection_type,
-                                    "dates": matches,
-                                    "context": context_text.strip(),
-                                }
-                            )
-                            break
-
-        # If no specific collections found, extract all dates from page
-        if not collection_info["collections"]:
-            import re
-
-            all_dates = []
-            for pattern in date_patterns:
-                matches = re.findall(pattern, page_content, re.IGNORECASE)
-                all_dates.extend(matches)
-
-            if all_dates:
-                collection_info["collections"].append(
-                    {
-                        "type": "Unknown",
-                        "dates": all_dates,
-                        "context": "Extracted from full page content",
-                    }
-                )
-
-        # Store raw page content for debugging
-        collection_info["raw_content"] = page_content[:1000]  # First 1000 chars
-
-        logger.debug(
-            f"Extracted {len(collection_info['collections'])} collection entries"
         )
         return collection_info
 

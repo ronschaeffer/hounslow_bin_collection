@@ -1,5 +1,31 @@
-"""Grab bin collection dates from the Hounslow Council website and make them available via MQTT and ICS for Home Assistant or elsewhere"""
+"""
+Hounslow Bin Collection - Modern bin collection monitoring system.
 
-__version__ = "0.1.0"
+This package provides:
+- Browser-based data collection from Hounslow Council website
+- MQTT integration with Home Assistant discovery
+- ICS calendar generation for collection reminders
+- Clean modular architecture separating core functionality from integrations
+"""
+
+from .collector import HounslowBinCollector
+from .config import Config
+from .integrations import BinCollectionCalendar, BinCollectionMQTTPublisher
+from .models import AddressConfig, BinCollectionData, CollectionInfo
+from .version import get_dynamic_version
+
+__version__ = get_dynamic_version()
 __author__ = "ronschaeffer"
 __email__ = "ron@ronschaeffer.com"
+
+__all__ = [
+    # Core functionality
+    "Config",
+    "HounslowBinCollector",
+    "AddressConfig",
+    "BinCollectionData",
+    "CollectionInfo",
+    # Integrations
+    "BinCollectionCalendar",
+    "BinCollectionMQTTPublisher",
+]

@@ -1,0 +1,93 @@
+type: custom:mushroom-template-card
+primary: |
+  {% set sensor_state = states('sensor.next_waste_collection') %}
+  {% set scheduled = state_attr('sensor.next_waste_collection', 'scheduled') %}
+
+  {% if sensor_state == 'unknown' or sensor_state == 'unavailable' %}
+    No Collections Scheduled
+  {% elif not sensor_state or sensor_state == '' %}
+    Check Collection Status
+  {% else %}
+    {% if '+' in sensor_state %}
+      Multiple Collections
+    {% else %}
+      {{ sensor_state }} Collection
+    {% endif %}
+  {% endif %}
+secondary: |
+  {% set scheduled = state_attr('sensor.next_waste_collection', 'scheduled') %}
+  {% set sensor_state = states('sensor.next_waste_collection') %}
+
+  {% if scheduled == 'unknown' or scheduled == 'unavailable' or not scheduled %}
+    Check collection schedule
+  {% elif 'Today' in scheduled %}
+    Put bins out now • Collection today
+  {% elif 'Tomorrow' in scheduled %}
+    Put bins out tonight • Collection tomorrow
+  {% elif 'days' in scheduled.lower() %}
+    {{ scheduled }}
+  {% else %}
+    {{ scheduled }}
+  {% endif %}
+icon: |
+  {% set icon_attr = state_attr('sensor.next_waste_collection', 'icon') %}
+  {% set sensor_state = states('sensor.next_waste_collection') %}
+
+  {% if icon_attr and icon_attr != 'unknown' %}
+    {{ icon_attr }}
+  {% elif '+' in (sensor_state or '') %}
+    mdi:delete-multiple
+  {% elif 'rec' in (sensor_state or '').lower() %}
+    mdi:recycle
+  {% elif 'garden' in (sensor_state or '').lower() %}
+    mdi:flower
+  {% elif 'wheelie' in (sensor_state or '').lower() or 'general' in (sensor_state or '').lower() %}
+    mdi:trash-can
+  {% elif 'food' in (sensor_state or '').lower() %}
+    mdi:food-apple
+  {% else %}
+    mdi:calendar-clock
+  {% endif %}
+entity: sensor.next_waste_collection
+icon_color: |
+  {% set color_attr = state_attr('sensor.next_waste_collection', 'icon_color') %}
+  {% set scheduled = state_attr('sensor.next_waste_collection', 'scheduled') %}
+
+  {% if color_attr and color_attr != 'unknown' %}
+    {{ color_attr }}
+  {% elif 'Today' in (scheduled or '') %}
+    red
+  {% elif 'Tomorrow' in (scheduled or '') %}
+    orange
+  {% elif 'days' in (scheduled or '').lower() %}
+    {% set days_match = scheduled | regex_findall_index('(\d+)\s*day') %}
+    {% if days_match and days_match | int <= 3 %}
+      yellow
+    {% else %}
+      green
+    {% endif %}
+  {% else %}
+    grey
+  {% endif %}
+badge_icon: |
+  {% set scheduled = state_attr('sensor.next_waste_collection', 'scheduled') %}
+  {% if 'Today' in (scheduled or '') %}
+    mdi:exclamation
+  {% elif 'Tomorrow' in (scheduled or '') %}
+    mdi:clock-alert
+  {% endif %}
+badge_color: |
+  {% set scheduled = state_attr('sensor.next_waste_collection', 'scheduled') %}
+  {% if 'Today' in (scheduled or '') %}
+    red
+  {% elif 'Tomorrow' in (scheduled or '') %}
+    orange
+  {% endif %}
+tap_action:
+  action: navigate
+  navigation_path: "#waste-collection"
+hold_action:
+  action: none
+double_tap_action:
+  action: none
+fill_container: true

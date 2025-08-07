@@ -1,0 +1,50 @@
+type: custom:mushroom-template-card
+primary: |
+  {% set status = states('binary_sensor.hounslow_bins_status') %}
+  {% if status == 'on' %}
+    Bin Collection Status
+  {% elif status == 'off' %}
+    System Error
+  {% else %}
+    Status Unknown
+  {% endif %}
+secondary: |
+  {% set status = states('binary_sensor.hounslow_bins_status') %}
+  {% set last_updated = state_attr('binary_sensor.hounslow_bins_status', 'last_updated') %}
+  {% if status == 'on' %}
+    System operational • Updated {{ relative_time(last_updated) }} ago
+  {% elif status == 'off' %}
+    Check logs for errors • Last update {{ relative_time(last_updated) }} ago
+  {% else %}
+    Status unavailable
+  {% endif %}
+icon: |
+  {% set status = states('binary_sensor.hounslow_bins_status') %}
+  {% if status == 'on' %}
+    mdi:check-circle
+  {% elif status == 'off' %}
+    mdi:alert-circle
+  {% else %}
+    mdi:help-circle
+  {% endif %}
+entity: binary_sensor.hounslow_bins_status
+icon_color: |
+  {% set status = states('binary_sensor.hounslow_bins_status') %}
+  {% if status == 'on' %}
+    green
+  {% elif status == 'off' %}
+    red
+  {% else %}
+    grey
+  {% endif %}
+badge_color: |
+  {% set status = states('binary_sensor.hounslow_bins_status') %}
+  {% if status == 'off' %}
+    red
+  {% endif %}
+badge_icon: |
+  {% set status = states('binary_sensor.hounslow_bins_status') %}
+  {% if status == 'off' %}
+    mdi:exclamation
+  {% endif %}
+fill_container: true

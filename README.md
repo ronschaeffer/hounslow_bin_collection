@@ -69,7 +69,7 @@ This tool includes **smart address matching** that automatically handles common 
 
 ```bash
 "7 Bath Rd"           → Matches "7 Bath Road"
-"136 Worple Rd"       → Matches "136 Worple Road"
+"132 Worple Rd"       → Matches "132 Worple Road"
 "Bath Road"           → Matches any address on Bath Road
 "Hounslow House"      → Matches council building
 "7"                   → Matches house number 7

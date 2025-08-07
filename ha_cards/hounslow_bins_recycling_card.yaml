@@ -1,0 +1,65 @@
+type: custom:mushroom-template-card
+primary: |
+  {% set collection_date = states('sensor.hounslow_bins_recycling') %}
+  {% if collection_date == 'unknown' or collection_date == 'unavailable' %}
+    Recycling
+  {% else %}
+    {% set date_obj = strptime(collection_date, '%Y-%m-%d') %}
+    {% set today = now().date() %}
+    {% set days_diff = (date_obj.date() - today).days %}
+    
+    {% if days_diff == 0 %}
+      Recycling • Today
+    {% elif days_diff == 1 %}
+      Recycling • Tomorrow
+    {% elif days_diff < 0 %}
+      Recycling
+    {% else %}
+      Recycling • {{ date_obj.strftime('%a %d %b') }}
+    {% endif %}
+  {% endif %}
+secondary: |
+  {% set collection_date = states('sensor.hounslow_bins_recycling') %}
+  {% if collection_date == 'unknown' or collection_date == 'unavailable' %}
+    Check schedule
+  {% else %}
+    {% set date_obj = strptime(collection_date, '%Y-%m-%d') %}
+    {% set today = now().date() %}
+    {% set days_diff = (date_obj.date() - today).days %}
+    
+    {% if days_diff == 0 %}
+      Put bin out today
+    {% elif days_diff == 1 %}
+      Put bin out tonight
+    {% elif days_diff < 0 %}
+      Collection completed
+    {% elif days_diff <= 7 %}
+      In {{ days_diff }} day{{ 's' if days_diff != 1 else '' }}
+    {% else %}
+      {{ date_obj.strftime('%d %B %Y') }}
+    {% endif %}
+  {% endif %}
+icon: mdi:recycle
+entity: sensor.hounslow_bins_recycling
+icon_color: |
+  {% set collection_date = states('sensor.hounslow_bins_recycling') %}
+  {% if collection_date == 'unknown' or collection_date == 'unavailable' %}
+    grey
+  {% else %}
+    {% set date_obj = strptime(collection_date, '%Y-%m-%d') %}
+    {% set today = now().date() %}
+    {% set days_diff = (date_obj.date() - today).days %}
+    
+    {% if days_diff == 0 %}
+      red
+    {% elif days_diff == 1 %}
+      orange
+    {% elif days_diff <= 3 %}
+      yellow
+    {% elif days_diff < 0 %}
+      grey
+    {% else %}
+      blue
+    {% endif %}
+  {% endif %}
+fill_container: true

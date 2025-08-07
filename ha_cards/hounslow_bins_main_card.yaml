@@ -1,0 +1,135 @@
+type: custom:mushroom-template-card
+primary: |
+  {% set status_sensor = states('binary_sensor.hounslow_bins_status') %}
+  {% set next_collection = states('sensor.hounslow_bins_next_collection') %}
+  {% if status_sensor == 'off' or next_collection == 'unknown' %}
+    Bin Collection
+  {% else %}
+    Next: {{ next_collection }}
+  {% endif %}
+secondary: |
+  {% set status_sensor = states('binary_sensor.hounslow_bins_status') %}
+  {% set general_waste = states('sensor.hounslow_bins_general_waste') %}
+  {% set recycling = states('sensor.hounslow_bins_recycling') %}
+  {% set food_waste = states('sensor.hounslow_bins_food_waste') %}
+  {% set garden_waste = states('sensor.hounslow_bins_garden_waste') %}
+
+  {% if status_sensor == 'off' %}
+    Check Status
+  {% else %}
+    {% set today = now().date() %}
+    {% set next_dates = [] %}
+    
+    {% if general_waste != 'unknown' and general_waste != 'unavailable' %}
+      {% set gw_date = strptime(general_waste, '%Y-%m-%d').date() %}
+      {% set days = (gw_date - today).days %}
+      {% if days >= 0 %}
+        {% set next_dates = next_dates + [{'type': 'General', 'days': days, 'date': gw_date}] %}
+      {% endif %}
+    {% endif %}
+    
+    {% if recycling != 'unknown' and recycling != 'unavailable' %}
+      {% set rec_date = strptime(recycling, '%Y-%m-%d').date() %}
+      {% set days = (rec_date - today).days %}
+      {% if days >= 0 %}
+        {% set next_dates = next_dates + [{'type': 'Recycling', 'days': days, 'date': rec_date}] %}
+      {% endif %}
+    {% endif %}
+    
+    {% if food_waste != 'unknown' and food_waste != 'unavailable' %}
+      {% set food_date = strptime(food_waste, '%Y-%m-%d').date() %}
+      {% set days = (food_date - today).days %}
+      {% if days >= 0 %}
+        {% set next_dates = next_dates + [{'type': 'Food', 'days': days, 'date': food_date}] %}
+      {% endif %}
+    {% endif %}
+    
+    {% if garden_waste != 'unknown' and garden_waste != 'unavailable' %}
+      {% set garden_date = strptime(garden_waste, '%Y-%m-%d').date() %}
+      {% set days = (garden_date - today).days %}
+      {% if days >= 0 %}
+        {% set next_dates = next_dates + [{'type': 'Garden', 'days': days, 'date': garden_date}] %}
+      {% endif %}
+    {% endif %}
+    
+    {% if next_dates|length > 0 %}
+      {% set next_dates = next_dates|sort(attribute='days') %}
+      {% set next_collection = next_dates[0] %}
+      {% if next_collection.days == 0 %}
+        Today • {{ next_collection.type }}
+      {% elif next_collection.days == 1 %}
+        Tomorrow • {{ next_collection.type }}
+      {% else %}
+        {{ next_collection.date.strftime('%a %d %b') }} • {{ next_collection.type }}
+      {% endif %}
+    {% else %}
+      No collections scheduled
+    {% endif %}
+  {% endif %}
+icon: mdi:delete-variant
+entity: binary_sensor.hounslow_bins_status
+icon_color: |
+  {% set status_sensor = states('binary_sensor.hounslow_bins_status') %}
+  {% set general_waste = states('sensor.hounslow_bins_general_waste') %}
+  {% set recycling = states('sensor.hounslow_bins_recycling') %}
+  {% set food_waste = states('sensor.hounslow_bins_food_waste') %}
+  {% set garden_waste = states('sensor.hounslow_bins_garden_waste') %}
+
+  {% if status_sensor == 'off' %}
+    red
+  {% else %}
+    {% set today = now().date() %}
+    {% set next_dates = [] %}
+    
+    {% if general_waste != 'unknown' and general_waste != 'unavailable' %}
+      {% set gw_date = strptime(general_waste, '%Y-%m-%d').date() %}
+      {% set days = (gw_date - today).days %}
+      {% if days >= 0 %}
+        {% set next_dates = next_dates + [days] %}
+      {% endif %}
+    {% endif %}
+    
+    {% if recycling != 'unknown' and recycling != 'unavailable' %}
+      {% set rec_date = strptime(recycling, '%Y-%m-%d').date() %}
+      {% set days = (rec_date - today).days %}
+      {% if days >= 0 %}
+        {% set next_dates = next_dates + [days] %}
+      {% endif %}
+    {% endif %}
+    
+    {% if food_waste != 'unknown' and food_waste != 'unavailable' %}
+      {% set food_date = strptime(food_waste, '%Y-%m-%d').date() %}
+      {% set days = (food_date - today).days %}
+      {% if days >= 0 %}
+        {% set next_dates = next_dates + [days] %}
+      {% endif %}
+    {% endif %}
+    
+    {% if garden_waste != 'unknown' and garden_waste != 'unavailable' %}
+      {% set garden_date = strptime(garden_waste, '%Y-%m-%d').date() %}
+      {% set days = (garden_date - today).days %}
+      {% if days >= 0 %}
+        {% set next_dates = next_dates + [days] %}
+      {% endif %}
+    {% endif %}
+    
+    {% if next_dates|length > 0 %}
+      {% set min_days = next_dates|min %}
+      {% if min_days == 0 %}
+        orange
+      {% elif min_days == 1 %}
+        yellow
+      {% elif min_days <= 3 %}
+        blue
+      {% else %}
+        green
+      {% endif %}
+    {% else %}
+      grey
+    {% endif %}
+  {% endif %}
+multiline_secondary: true
+fill_container: true
+tap_action:
+  action: navigate
+  navigation_path: "#hounslow-bins"

@@ -24,11 +24,11 @@ app:
 
 address:
   # Your postcode (required)
-  postcode: "TW3 3EB"
+  postcode: "TW7 7HX"
 
   # Your address hint (required)
   # Can be partial - the system will find the best match
-  address_hint: "7 Bath Rd"# ===================================================================
+  address_hint: "132 Worple Rd"# ===================================================================
 # SMART ADDRESS MATCHING INFO
 # ===================================================================
 # The enhanced address matching system automatically handles:
@@ -39,7 +39,7 @@ address:
 #
 # Examples that work:
 # - "7 Bath Rd" → matches "7 Bath Road"
-# - "136 Worple Rd" → matches "136 Worple Road"
+# - "132 Worple Rd" → matches "132 Worple Road"
 # - "Bath Road" → matches "7 Bath Road" (if unique)
 # - "Hounslow Library" → matches "Centre Space Hounslow Library"
 #
@@ -54,7 +54,7 @@ examples:
   # Example 1: Using house number + abbreviated street name
   residential_abbreviated:
     postcode: "TW7 7HX"
-    address_hint: "136 Worple Rd"
+    address_hint: "132 Worple Rd"
     description: "Common format - house number with abbreviated street"
 
   # Example 2: Using full street name only

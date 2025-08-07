@@ -5,7 +5,8 @@ from src.hounslow_bin_collection import __author__, __version__
 
 def test_version():
     """Test that version is defined."""
-    assert __version__ == "0.1.0"
+    # Handle git-versioned strings like "0.1.0-6dd7913-dirty"
+    assert __version__.startswith("0.1.0")
 
 
 def test_author():

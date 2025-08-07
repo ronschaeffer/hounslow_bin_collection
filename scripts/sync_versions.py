@@ -112,7 +112,6 @@ class VersionSync:
 
         # Common HA config file patterns
         patterns = [
-            "config/ha_entities.yaml",
             "config/ha_*.yaml",
             "ha_card/*.yaml",
         ]

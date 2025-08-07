@@ -1,0 +1,53 @@
+type: custom:mushroom-template-card
+primary: |
+  {% set sensor_state = states('sensor.next_waste_collection') %}
+  {% if sensor_state == 'unknown' or sensor_state == 'unavailable' %}
+    No Collections Scheduled
+  {% else %}
+    {{ sensor_state }}
+  {% endif %}
+secondary: |
+  {% set scheduled = state_attr('sensor.next_waste_collection', 'scheduled') %}
+  {% if scheduled == 'unknown' or scheduled == 'unavailable' or not scheduled %}
+    Check collection schedule
+  {% else %}
+    {{ scheduled }}
+  {% endif %}
+icon: |
+  {% set icon_attr = state_attr('sensor.next_waste_collection', 'icon') %}
+  {% if icon_attr %}
+    {{ icon_attr }}
+  {% else %}
+    mdi:calendar-clock
+  {% endif %}
+entity: sensor.next_waste_collection
+icon_color: |
+  {% set color_attr = state_attr('sensor.next_waste_collection', 'icon_color') %}
+  {% if color_attr %}
+    {{ color_attr }}
+  {% else %}
+    grey
+  {% endif %}
+badge_icon: |
+  {% set sensor_state = states('sensor.next_waste_collection') %}
+  {% set scheduled = state_attr('sensor.next_waste_collection', 'scheduled') %}
+  {% if 'Today' in (scheduled or '') %}
+    mdi:exclamation
+  {% elif 'Tomorrow' in (scheduled or '') %}
+    mdi:clock-alert
+  {% endif %}
+badge_color: |
+  {% set scheduled = state_attr('sensor.next_waste_collection', 'scheduled') %}
+  {% if 'Today' in (scheduled or '') %}
+    red
+  {% elif 'Tomorrow' in (scheduled or '') %}
+    orange
+  {% endif %}
+tap_action:
+  action: navigate
+  navigation_path: "#waste-collection"
+hold_action:
+  action: none
+double_tap_action:
+  action: none
+fill_container: true
