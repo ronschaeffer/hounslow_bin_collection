@@ -509,18 +509,17 @@ files = [
 
 [[package]]
 name = "paho-mqtt"
-version = "2.1.0"
+version = "1.6.1"
 description = "MQTT version 5.0/3.1.1 client class"
 optional = false
-python-versions = ">=3.7"
+python-versions = "*"
 groups = ["main"]
 files = [
-    {file = "paho_mqtt-2.1.0-py3-none-any.whl", hash = "sha256:6db9ba9b34ed5bc6b6e3812718c7e06e2fd7444540df2455d2c51bd58808feee"},
-    {file = "paho_mqtt-2.1.0.tar.gz", hash = "sha256:12d6e7511d4137555a3f6ea167ae846af2c7357b10bc6fa4f7c3968fc1723834"},
+    {file = "paho-mqtt-1.6.1.tar.gz", hash = "sha256:2a8291c81623aec00372b5a85558a372c747cbca8e9934dfe218638b8eefc26f"},
 ]
 
 [package.extras]
-proxy = ["pysocks"]
+proxy = ["PySocks"]
 
 [[package]]
 name = "platformdirs"
@@ -688,21 +687,6 @@ files = [
 six = ">=1.5"
 
 [[package]]
-name = "python-dotenv"
-version = "1.1.1"
-description = "Read key-value pairs from a .env file and set them as environment variables"
-optional = false
-python-versions = ">=3.9"
-groups = ["main"]
-files = [
-    {file = "python_dotenv-1.1.1-py3-none-any.whl", hash = "sha256:31f23644fe2602f88ff55e1f5c79ba497e01224ee7737937930c448e4d0e24dc"},
-    {file = "python_dotenv-1.1.1.tar.gz", hash = "sha256:a8a6399716257f45be6a007360200409fce5cda2661e3dec71d23dc15f6189ab"},
-]
-
-[package.extras]
-cli = ["click (>=5.0)"]
-
-[[package]]
 name = "pyyaml"
 version = "6.0.2"
 description = "YAML parser and emitter for Python"
@@ -786,24 +770,6 @@ urllib3 = ">=1.21.1,<3"
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
-
-[[package]]
-name = "ronschaeffer-mqtt-publisher"
-version = "0.1.4"
-description = "An MQTT publisher package"
-optional = false
-python-versions = "<4.0,>=3.9"
-groups = ["main"]
-files = [
-    {file = "ronschaeffer_mqtt_publisher-0.1.4-py3-none-any.whl", hash = "sha256:a202d2e5f434f1e2a281780993b4259b5073563d9ff767ff3520924af4d178fd"},
-    {file = "ronschaeffer_mqtt_publisher-0.1.4.tar.gz", hash = "sha256:9b86b35584ee3d7db6827507d512b7556abd69b0fef16e82a169b2e8eca37298"},
-]
-
-[package.dependencies]
-paho-mqtt = "2.1.0"
-python-dotenv = ">=1.1.1,<2.0.0"
-pyyaml = ">=6.0,<7.0"
-typing-extensions = ">=4.7.0,<5.0.0"
 
 [[package]]
 name = "ruff"
@@ -981,5 +947,5 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.10,<4.0"
-content-hash = "56b4d11e85d8cfdd90605018f3be3b0140510596c48d957b6d78e88caeb20479"
+python-versions = "^3.9"
+content-hash = "5d11d3b11118e9103de13c0807c6b3e8925adf28e9f48d4f25f90a3dea094f66"
