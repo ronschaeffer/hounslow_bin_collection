@@ -1,24 +1,28 @@
 <?xml version="1.0"?>
 <Container version="2">
-  <Name>HounslowBinCollectionCalendar</Name>
-  <Icon>https://raw.githubusercontent.com/ronschaeffer/hounslow-bin-collection-calendar/main/unraid-template/icon.png</Icon>
-  <Repository>ghcr.io/ronschaeffer/hounslow-bin-collection-calendar:latest</Repository>
-  <Registry>https://github.com/ronschaeffer/hounslow-bin-collection-calendar/pkgs/container/hounslow-bin-collection-calendar</Registry>
+  <Name>HounslowBinCollection</Name>
+  <Icon>https://raw.githubusercontent.com/ronschaeffer/hounslow_bin_collection/main/icon.png</Icon>
+  <Repository>ghcr.io/ronschaeffer/hounslow_bin_collection:latest</Repository>
+  <Registry>https://github.com/ronschaeffer/hounslow_bin_collection/pkgs/container/hounslow_bin_collection</Registry>
   <Category>Home Automation</Category>
-  <Description>Automatically syncs Hounslow Council waste collection schedules to Home Assistant.</Description>
-  <Project>https://github.com/ronschaeffer/hounslow-bin-collection-calendar</Project>
+  <Description>Automated waste collection schedule scraper for the London Borough of Hounslow. Uses browser automation to extract bin collection dates, publishes to MQTT for Home Assistant, and generates ICS calendar files.</Description>
+  <Project>https://github.com/ronschaeffer/hounslow_bin_collection</Project>
   <WebUI/>
   <Network>bridge</Network>
   <Privileged>false</Privileged>
   <BindTime>true</BindTime>
-  <Config Name="Web Server Port" Target="8080" Type="Port" Description="The host port for accessing the ICS calendar file.">8208</Config>
-  <Config Name="ICS Output Path" Target="/app/www" Type="Path" Mode="rw">/mnt/user/appdata/HounslowBinCollectionCalendar/www/</Config>
-  <Config Name="UPRN" Target="UPRN" Type="Variable" Required="true" Description="REQUIRED: Your Unique Property Reference Number."></Config>
-  <Config Name="Cron Schedule" Target="CRON_SCHEDULE" Type="Variable" Default="50 2 * * *" Required="true">50 2 * * *</Config>
+  <Config Name="Config Path" Target="/app/config" Type="Path" Mode="rw">/mnt/user/appdata/HounslowBinCollection/config/</Config>
+  <Config Name="Output Path" Target="/app/output" Type="Path" Mode="rw">/mnt/user/appdata/HounslowBinCollection/output/</Config>
+  <Config Name="Postcode" Target="HOUNSLOW_POSTCODE" Type="Variable" Required="true" Description="Your Hounslow postcode (e.g. TW7 7HX)"></Config>
+  <Config Name="Address" Target="HOUNSLOW_ADDRESS" Type="Variable" Required="true" Description="Your address hint for matching (e.g. 132 Worple Rd)"></Config>
+  <Config Name="Cron Schedule" Target="CRON_SCHEDULE" Type="Variable" Default="50 2 * * *" Required="true" Description="Cron schedule for collection runs">50 2 * * *</Config>
   <Config Name="Timezone" Target="TZ" Type="Variable" Default="Europe/London" Required="true">Europe/London</Config>
   <Config Name="MQTT Enabled" Target="MQTT_ENABLED" Type="Variable" Default="true">true</Config>
-  <Config Name="MQTT Broker" Target="MQTT_BROKER" Type="Variable" Description="REQUIRED if MQTT is enabled."></Config>
-  <Config Name="MQTT Port" Target="MQTT_PORT" Type="Variable" Default="1883"></Config>
+  <Config Name="MQTT Broker URL" Target="MQTT_BROKER_URL" Type="Variable" Description="MQTT broker hostname or IP (required if MQTT enabled)"></Config>
+  <Config Name="MQTT Broker Port" Target="MQTT_BROKER_PORT" Type="Variable" Default="1883">1883</Config>
+  <Config Name="MQTT Security" Target="MQTT_SECURITY" Type="Variable" Default="none" Description="none, username, or tls">none</Config>
   <Config Name="MQTT Username" Target="MQTT_USERNAME" Type="Variable"></Config>
   <Config Name="MQTT Password" Target="MQTT_PASSWORD" Type="Variable" Mask="true"></Config>
+  <Config Name="Calendar Enabled" Target="CALENDAR_ENABLED" Type="Variable" Default="true">true</Config>
+  <Config Name="Home Assistant Discovery" Target="HOME_ASSISTANT_ENABLED" Type="Variable" Default="true">true</Config>
 </Container>

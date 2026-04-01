@@ -1,11 +1,27 @@
 .git
-.gitignore
-.dockerignore
-__pycache__
-venv
+.github
+.claude
 .venv
-README.md
-LICENSE
+.pytest_cache
+.ruff_cache
+.coverage
+htmlcov
+__pycache__
+*.pyc
+*.egg-info
+
+# Config and env (mounted at runtime)
+config/config.yaml
 .env
-.env.example
-*.md
+.env.local
+
+# Dev files
+tests/
+.dev-scripts/
+.pre-commit-config.yaml
+Makefile
+CLAUDE.md
+CHANGELOG.md
+
+# Output (generated at runtime)
+output/

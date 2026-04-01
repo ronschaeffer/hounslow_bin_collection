@@ -1,6 +1,36 @@
 #!/bin/sh
-# entrypoint.sh
-echo "${CRON_SCHEDULE:-50 2 * * *} python /app/waste_sync.py >> /proc/1/fd/1 2>>/proc/1/fd/2" > /etc/cron.d/waste-sync-cron
-chmod 0644 /etc/cron.d/waste-sync-cron
-crontab /etc/cron.d/waste-sync-cron
-exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+# Hounslow Bin Collection container entrypoint
+#
+# If CRON_SCHEDULE is set, sets up cron and runs the command on schedule.
+# Otherwise, runs the command once and exits.
+
+set -e
+
+# Copy default config on first run
+if [ ! -f /app/config/config.yaml ]; then
+    if [ -f /app/config-defaults/config.yaml.example ]; then
+        cp /app/config-defaults/config.yaml.example /app/config/config.yaml
+        echo "Copied default config.yaml to /app/config/"
+    fi
+fi
+
+# If CRON_SCHEDULE is set, run as a scheduled service
+if [ -n "$CRON_SCHEDULE" ]; then
+    echo "Setting up cron schedule: $CRON_SCHEDULE"
+
+    # Build the cron command — run the entrypoint args on schedule
+    COMMAND="$*"
+    echo "$CRON_SCHEDULE cd /app && $COMMAND >> /proc/1/fd/1 2>>/proc/1/fd/2" > /etc/cron.d/hounslow-bins
+    chmod 0644 /etc/cron.d/hounslow-bins
+    crontab /etc/cron.d/hounslow-bins
+
+    # Run once immediately on start, then hand off to cron
+    echo "Running initial collection..."
+    $COMMAND || true
+
+    echo "Starting cron daemon..."
+    exec cron -f
+else
+    # One-shot mode: run the command and exit
+    exec "$@"
+fi
