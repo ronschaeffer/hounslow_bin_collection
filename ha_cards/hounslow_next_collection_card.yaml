@@ -1,0 +1,36 @@
+type: custom:mushroom-template-card
+entity: sensor.hounslow_bins_next_waste_collection
+primary: |
+  {% set state = states(entity) %}
+  {% if state in ['unknown', 'unavailable'] %}
+    No Collections Scheduled
+  {% else %}
+    {{ state }}
+  {% endif %}
+secondary: |
+  {% set scheduled = state_attr(entity, 'scheduled') %}
+  {% if scheduled in ['unknown', 'unavailable', none] or not scheduled %}
+    Check collection schedule
+  {% else %}
+    {{ scheduled }}
+  {% endif %}
+icon: |
+  {% set i = state_attr(entity, 'icon') %}
+  {{ i if i else 'mdi:calendar-clock' }}
+icon_color: |
+  {% set c = state_attr(entity, 'icon_color') %}
+  {{ c if c else 'grey' }}
+badge_icon: |
+  {% set scheduled = state_attr(entity, 'scheduled') or '' %}
+  {% if 'Today' in scheduled %} mdi:exclamation
+  {% elif 'Tomorrow' in scheduled %} mdi:clock-alert
+  {% endif %}
+badge_color: |
+  {% set scheduled = state_attr(entity, 'scheduled') or '' %}
+  {% if 'Today' in scheduled %} red
+  {% elif 'Tomorrow' in scheduled %} orange
+  {% endif %}
+tap_action:
+  action: navigate
+  navigation_path: "#waste-collection"
+fill_container: true
