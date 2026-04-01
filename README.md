@@ -1,241 +1,256 @@
-# Hounslow Bin Collection Calendar
+# Hounslow Bin Collection
 
-[![License: MIT](https://img.shields.io/github/license/ronschaeffer/hounslow-bin-collection-calendar)](https://opensource.org/licenses/MIT)
-[![GitHub Container Registry](https://img.shields.io/badge/GHCR-ghcr.io/ronschaeffer/hounslow--bin--collection--calendar-blue?logo=github)](https://github.com/ronschaeffer/hounslow-bin-collection-calendar/pkgs/container/hounslow-bin-collection-calendar)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-This project provides automated browser-based extraction of waste collection data for properties in the London Borough of Hounslow. It uses sophisticated browser automation to bypass API security measures and extract real-time collection schedules directly from the official council website.
-
-The project is designed to be deployed as a Docker container, with all configuration handled by environment variables for maximum portability and security.
+Automated waste collection schedule scraper for the London Borough of Hounslow. Uses browser automation to extract real-time bin collection dates from the council website, publishes to MQTT for Home Assistant, and generates ICS calendar files.
 
 ---
 
-## How It Works
+## Table of Contents
 
-The container runs browser automation that:
+1. [Features](#features)
+2. [Prerequisites](#prerequisites)
+3. [Installation](#installation)
+4. [Configuration](#configuration)
+5. [Usage](#usage)
+6. [MQTT Topics](#mqtt-topics)
+7. [Home Assistant Integration](#home-assistant-integration)
+8. [Docker Deployment](#docker-deployment)
+9. [Testing](#testing)
+10. [Development](#development)
+11. [License](#license)
 
-1. **Navigates to** Hounslow Council's official waste collection form
-2. **Enters your postcode** and selects your specific address
-3. **Extracts collection data** including bin types, frequencies, and specific dates
-4. **Publishes to MQTT** (optional) for Home Assistant integration
-5. **Generates iCalendar** files for calendar applications
-
-**Important:** Collection dates may vary due to holidays and service changes. This tool extracts real-time data directly from the council's system to ensure accuracy.
+---
 
 ## Features
 
-- **Browser Automation:** Uses Playwright to navigate the official council website
-- **Real-time Data:** Extracts current collection schedules including holiday adjustments
-- **Configurable Address:** Use any valid Hounslow postcode and address
-- **MQTT Auto-Discovery:** Automatically creates Home Assistant sensors for each waste type
-- **Self-Hosted iCalendar:** Built-in web server provides stable local URLs for calendar files
-- **Status Monitoring:** Dedicated health-check sensors for monitoring
-- **Fully Containerized:** Lightweight Docker image with built-in scheduler
-- **Production Ready:** Headless browser operation suitable for server deployment
+- **Browser Automation:** Playwright-based scraping of the official Hounslow Council website
+- **Smart Address Matching:** Abbreviation expansion (`Rd` to `Road`, `St` to `Street`, etc.) and fuzzy matching
+- **MQTT Auto-Discovery:** Creates Home Assistant sensors for each waste type via retained discovery topics
+- **Consolidated Sensor:** Single `next_waste_collection` sensor showing the soonest collection with urgency attributes
+- **ICS Calendar:** Generates calendar files with evening and morning reminders
+- **Fully Containerized:** Docker image with built-in cron scheduler
 
-## Quick Start
+## How It Works
 
-### Testing with Hounslow Council's Address
+1. Navigates to Hounslow Council's waste collection form
+2. Enters your postcode, selects your address from the dropdown
+3. Extracts collection types, frequencies, and next/last dates
+4. Publishes to MQTT (Home Assistant discovery) and/or generates ICS calendar
 
-For testing and demonstration, the tool uses Hounslow Council's own address by default:
+Collection dates are extracted in real-time from the council's system, including holiday adjustments.
 
-```bash
-# Test with default address (Hounslow Council HQ)
-poetry run python demo_final.py
+## Prerequisites
 
-# Or get JSON output
-poetry run python demo_final.py --json
-```
+- Python 3.11+
+- [Poetry](https://python-poetry.org/)
+- Chromium (installed automatically by Playwright)
+- MQTT broker (optional, for Home Assistant integration)
 
-This will demonstrate the tool using:
-
-- **Postcode:** TW3 3EB
-- **Address:** 7 Bath Rd, Hounslow
-- **(Hounslow Council headquarters)**
-
-## 🎯 Address Matching & Configuration
-
-### Enhanced Address Matching
-
-This tool includes **smart address matching** that automatically handles common address variations:
-
-✅ **Automatically handles:**
-
-- **Abbreviations:** `Rd` → `Road`, `St` → `Street`, `Ave` → `Avenue`, etc.
-- **Partial addresses:** House numbers, street names only
-- **Case variations:** Different capitalization patterns
-- **Building names:** Libraries, council buildings, schools
-
-✅ **Examples that work:**
+## Installation
 
 ```bash
-"7 Bath Rd"           → Matches "7 Bath Road"
-"132 Worple Rd"       → Matches "132 Worple Road"
-"Bath Road"           → Matches any address on Bath Road
-"Hounslow House"      → Matches council building
-"7"                   → Matches house number 7
+git clone https://github.com/ronschaeffer/hounslow_bin_collection.git
+cd hounslow_bin_collection
+poetry install --with dev
+poetry run playwright install chromium
 ```
 
-### 🔗 Manual Address Verification
+## Configuration
 
-**For 100% accuracy, manually verify your address at:**
-**https://my.hounslow.gov.uk/service/Waste_and_recycling_collections**
+### Environment Variables
 
-1. Enter your postcode
-2. Select your exact address from the dropdown
-3. Copy the exact address text for configuration
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `HOUNSLOW_POSTCODE` | Your Hounslow postcode | **Yes** | |
+| `HOUNSLOW_ADDRESS` | Address hint for matching | **Yes** | |
+| `MQTT_ENABLED` | Enable MQTT publishing | No | `true` |
+| `MQTT_BROKER_URL` | MQTT broker hostname/IP | If MQTT enabled | |
+| `MQTT_BROKER_PORT` | MQTT broker port | No | `1883` |
+| `MQTT_USERNAME` | MQTT username | No | |
+| `MQTT_PASSWORD` | MQTT password | No | |
+| `CALENDAR_ENABLED` | Enable ICS generation | No | `true` |
+| `HOME_ASSISTANT_ENABLED` | Enable HA discovery | No | `true` |
 
-### Configuration Options
+### Config File
 
-You can configure your address in multiple ways:
-
-#### Option 1: Environment Variables (Recommended for Docker)
+Copy the example and edit:
 
 ```bash
-# In your .env file or Docker environment
-HOUNSLOW_POSTCODE=TW3 3EB
-HOUNSLOW_ADDRESS=7 Bath Rd
+cp config/config.yaml.example config/config.yaml
 ```
-
-#### Option 2: Configuration File
 
 ```yaml
-# In config/config.yaml
 address:
-  postcode: "TW3 3EB"
-  address_hint: "7 Bath Rd"
+  postcode: "TW7 7HX"
+  address_hint: "132 Worple Rd"
+
+mqtt:
+  enabled: true
+  broker_url: "10.10.10.20"
+  broker_port: 1883
 ```
 
-#### Option 3: Direct Code Usage
+Environment variables override config file values.
+
+### Address Matching
+
+The address hint supports abbreviations and partial matches:
+
+```
+"132 Worple Rd"    -> matches "132, Worple Road, Isleworth, TW7 7HX"
+"7 Bath Rd"        -> matches "7, Bath Road, Hounslow, TW3 3EB"
+"Bath Road"        -> matches any address on Bath Road
+```
+
+To verify your exact address format, visit the [council website](https://my.hounslow.gov.uk/service/Waste_and_recycling_collections).
+
+## Usage
+
+### CLI
+
+```bash
+# Collect data only
+poetry run hounslow-bins collect
+
+# Collect and publish to MQTT
+poetry run hounslow-bins mqtt
+
+# Collect and generate calendar
+poetry run hounslow-bins calendar
+
+# Run all integrations
+poetry run hounslow-bins all
+
+# Show status
+poetry run hounslow-bins status
+```
+
+### Python API
 
 ```python
-from hounslow_bin_collection.browser_collector import BrowserWasteCollector
+from hounslow_bin_collection.collector import HounslowBinCollector
+from hounslow_bin_collection.models import AddressConfig
 
-with BrowserWasteCollector() as collector:
-    result = collector.fetch_collection_data("TW3 3EB", "7 Bath Rd")
+address = AddressConfig(postcode="TW7 7HX", address_hint="132 Worple Rd")
+collector = HounslowBinCollector(headless=True)
+data = collector.collect_bin_data(address)
+
+for collection in data.collections:
+    if collection.next_collection:
+        print(f"{collection.type}: {collection.next_date_iso}")
 ```
 
-### Configuration for Your Address
+## MQTT Topics
 
-Copy the example configuration and customize for your address:
+All topics are published with `retain=True`.
 
-## Installation (Docker Recommended)
+### State Topics
 
-### On Unraid (Easiest Method)
+| Topic | Description |
+|-------|-------------|
+| `hounslow_bins/bin_collection_general_waste/state` | General waste next date and metadata |
+| `hounslow_bins/bin_collection_recycling/state` | Recycling next date and metadata |
+| `hounslow_bins/bin_collection_food_waste/state` | Food waste next date and metadata |
+| `hounslow_bins/bin_collection_garden_waste/state` | Garden waste next date and metadata |
+| `hounslow_bins/next_waste_collection/state` | Consolidated: soonest collection with urgency |
+| `hounslow_bins/bin_collection_status/state` | Online status, address, collection count |
+| `hounslow_bins/status` | Availability (`online`/`offline`) |
 
-1.  **Install:** In the Unraid UI, go to the **Apps** tab and search for `HounslowBinCollectionCalendar`. Click **Install**.
-2.  **Configure:** Fill in the template fields with your details. You must provide your `UPRN`. If using MQTT, also provide your `MQTT_BROKER`.
-3.  **Deploy & Start:** Click Apply to start the container.
+### Discovery Topics
 
-### On any other Docker host (via Docker Compose)
+Published to `homeassistant/sensor/<unique_id>/config` for auto-discovery.
 
-1.  **Clone the Repository:**
-    ```bash
-    git clone https://github.com/ronschaeffer/hounslow-bin-collection-calendar.git
-    cd hounslow-bin-collection-calendar
-    ```
-2.  **Create Configuration File:** Copy the example `.env` file.
-    ```bash
-    cp .env.example .env
-    ```
-3.  **Edit Configuration:** Open the `.env` file with a text editor and fill in your UPRN, MQTT details, and any other settings you wish to customize.
-4.  **Run:** Use Docker Compose to build and start the container in the background.
-    ```bash
-    docker-compose up --build -d
-    ```
+### Next Waste Collection Payload
+
+The consolidated sensor provides attributes for dashboard cards:
+
+```json
+{
+  "name": "Recycling Collection",
+  "date": "2026-04-08",
+  "scheduled": "Wed 08 Apr",
+  "icon": "mdi:recycle",
+  "icon_color": "blue",
+  "waste_type": "recycling",
+  "last_updated": "2026-04-01T20:41:18.917067"
+}
+```
+
+The `scheduled` field provides human-readable text: "Today", "Tomorrow", "In 3 days", "Wed 08 Apr", etc.
+The `icon_color` reflects urgency: `red` (today), `orange` (tomorrow), `amber` (within 3 days), or waste-type color.
 
 ## Home Assistant Integration
 
-### 1. MQTT Sensors
+### Sensors
 
-If `MQTT_ENABLED` is `true`, the following sensors will appear automatically in Home Assistant:
+After MQTT publishing, these sensors appear automatically:
 
-- **Collection Sensors:** `sensor.hounslow_refuse`, `sensor.hounslow_recycling`, etc.
-- **Status Sensor:** `sensor.hounslow_bin_collection_status`. The state is `OK` or `Error`. Check its attributes for the last run time and any error messages.
+| Entity ID | Description |
+|-----------|-------------|
+| `sensor.hounslow_bins_bin_collection_general_waste` | Next general waste date |
+| `sensor.hounslow_bins_bin_collection_recycling` | Next recycling date |
+| `sensor.hounslow_bins_bin_collection_food_waste` | Next food waste date |
+| `sensor.hounslow_bins_bin_collection_garden_waste` | Next garden waste date |
+| `sensor.hounslow_bins_next_waste_collection` | Soonest collection (for cards) |
+| `sensor.hounslow_bins_bin_collection_status` | Service status |
 
-### 2. iCalendar
+### Dashboard Card
 
-The script generates an `.ics` file and serves it locally.
+A Mushroom template card for the consolidated sensor is provided in [`ha_cards/`](ha_cards/).
 
-1.  **Find Your URL:** The URL for your calendar is `http://<YOUR_DOCKER_HOST_IP>:<ICS_PORT>/waste_calendar.ics`.
-    - `<YOUR_DOCKER_HOST_IP>` is the IP address of your Unraid server or Docker machine.
-    - `<ICS_PORT>` is the port you configured (default: `8208`).
-    - _Example:_ `http://192.168.1.50:8208/waste_calendar.ics`
-2.  **Add to Home Assistant:** Go to **Settings > Devices & Services > Add Integration** and find **iCalendar Platform**.
-3.  Paste the URL from Step 1 into the URL field and give your calendar a name.
+### iCalendar
 
-## Configuration Variables
+The generated `.ics` file can be added to Home Assistant via **Settings > Devices & Services > Add Integration > iCalendar**.
 
-| Variable            | Description                                                                | Required                    | Default Value | Example         |
-| ------------------- | -------------------------------------------------------------------------- | --------------------------- | ------------- | --------------- |
-| `UPRN`              | Your Unique Property Reference Number (for waste_sync.py - API blocked).   | **Legacy**                  | `None`        | `100021577775`  |
-| `HOUNSLOW_POSTCODE` | Your postcode for browser automation address lookup.                       | **Yes** (browser method)    | `None`        | `TW3 3EB`       |
-| `HOUNSLOW_ADDRESS`  | Your address hint for enhanced browser matching.                           | **Yes** (browser method)    | `None`        | `7 Bath Rd`     |
-| `CRON_SCHEDULE`     | The `cron` schedule for running the sync.                                  | No                          | `50 2 * * *`  | `0 6 * * *`     |
-| `TZ`                | Your local timezone (e.g., `Europe/London`).                               | No                          | `None`        | `Europe/London` |
-| `ICS_PORT`          | The **host port** for the built-in web server that serves the `.ics` file. | No                          | `8208`        | `8080`          |
-| `MQTT_ENABLED`      | Set to `true` to enable creating Home Assistant sensors via MQTT.          | No                          | `true`        | `false`         |
-| `MQTT_BROKER`       | IP address or hostname of your MQTT broker.                                | **If MQTT_ENABLED is true** | `None`        | `192.168.1.100` |
-| `MQTT_PORT`         | The port for your MQTT broker.                                             | No                          | `1883`        | `1883`          |
-| `MQTT_USERNAME`     | Your MQTT username.                                                        | No                          | `None`        | `homeassistant` |
-| `MQTT_PASSWORD`     | Your MQTT password.                                                        | No                          | `None`        | `secret123`     |
+## Docker Deployment
 
-### Address Configuration Notes
+### Docker Compose
 
-⚠️ **IMPORTANT**: The council API has blocked direct UPRN access with sophisticated security measures.
+```bash
+cp .env.example .env
+# Edit .env with your address and MQTT details
+docker-compose up -d
+```
 
-- **✅ Browser Method (WORKING)**: Use `HOUNSLOW_POSTCODE` + `HOUNSLOW_ADDRESS` with enhanced browser automation
-- **❌ UPRN Method (BLOCKED)**: Direct API access using `UPRN` is currently blocked by council security
-- **📋 Recommendation**: Use the browser method (`HOUNSLOW_POSTCODE` + `HOUNSLOW_ADDRESS`) for reliable data collection
-- **🎯 Enhanced Matching**: The `HOUNSLOW_ADDRESS` supports abbreviations and partial addresses
-- **Manual Verification:** Always verify your exact address format at the council website for best results
+### Unraid
+
+An Unraid community template is provided in [`unraid-template/`](unraid-template/).
+
+## Testing
+
+```bash
+make test              # Run pytest with coverage
+make check             # Lint only (ruff)
+make ci-check          # Lint + test (run before pushing)
+```
 
 ## Development
 
-This project can also be run locally for development:
+```bash
+poetry install --with dev
+make install-hooks     # Install pre-commit hooks
+make fix               # Auto-fix lint + format
+make clean             # Remove caches
+```
 
-1. **Setup Environment:**
+### Project Structure
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   pip install -e .[dev]
-   ```
-
-2. **Configure Environment Variables:**
-
-   ```bash
-   # Browser automation method (WORKING - RECOMMENDED)
-   export HOUNSLOW_POSTCODE=TW3 3EB
-   export HOUNSLOW_ADDRESS="7 Bath Rd"
-   export MQTT_ENABLED=false
-
-   # Legacy UPRN method (currently blocked by council security)
-   # export UPRN=your_uprn_here
-   ```
-
-3. **Run the script:**
-
-   ```bash
-   python waste_sync.py
-   ```
-
-4. **Test Enhanced Address Matching:**
-
-   ```bash
-   # Test different address formats
-   poetry run python demo_enhanced.py --enhanced
-
-   # Test specific functionality
-   poetry run python test_address_matching.py
-   ```
-
-### Enhanced Development Features
-
-- **Smart Address Matching:** Test various address formats automatically
-- **Manual Verification:** Built-in guidance for exact address lookup
-- **Comprehensive Logging:** Detailed logs show matching process and selections
-- **Error Handling:** Graceful fallbacks with helpful error messages
+```
+src/hounslow_bin_collection/
+  __main__.py            # CLI entry point
+  config.py              # YAML + env var configuration
+  models.py              # Data models (CollectionInfo, BinCollectionData)
+  collector.py           # High-level collection interface
+  browser_collector.py   # Playwright automation
+  enhanced_extractor.py  # Page content parsing
+  integrations/
+    mqtt.py              # MQTT publishing with HA discovery
+    calendar.py          # ICS calendar generation
+```
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+[MIT](LICENSE)
