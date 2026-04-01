@@ -76,8 +76,8 @@ def _compute_scheduled_text(iso_date: str) -> str:
         return "Today"
     if days == 1:
         return "Tomorrow"
-    if days < 7:
-        return f"In {days} days"
+    if days == 2:
+        return "In 2 days"
     day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     return f"{day_names[collection_date.weekday()]} {collection_date.strftime('%d %b')}"
 
@@ -530,7 +530,6 @@ class BinCollectionMQTTPublisher:
             state_topic=f"{TOPIC_PREFIX}/next_waste_collection/state",
             value_template="{{ value_json.name }}",
             json_attributes_topic=f"{TOPIC_PREFIX}/next_waste_collection/state",
-            icon="mdi:calendar-clock",
             availability_topic=AVAILABILITY_TOPIC,
             payload_available="online",
             payload_not_available="offline",
