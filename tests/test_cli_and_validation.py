@@ -15,10 +15,10 @@ class TestConfigYamlFormat:
     """Test configuration file format."""
 
     def test_config_yaml_format(self):
-        """Test that config.yaml has the correct format."""
+        """Test that config.yaml.example has the correct format."""
         import yaml
 
-        config_path = Path(__file__).parent.parent / "config" / "config.yaml"
+        config_path = Path(__file__).parent.parent / "config" / "config.yaml.example"
 
         with open(config_path) as f:
             config = yaml.safe_load(f)
@@ -33,8 +33,8 @@ class TestCLICommands:
     """Test cases for CLI command functionality."""
 
     def test_config_file_exists(self):
-        """Test that the config file exists."""
-        config_path = Path(__file__).parent.parent / "config" / "config.yaml"
+        """Test that the config example file exists."""
+        config_path = Path(__file__).parent.parent / "config" / "config.yaml.example"
         assert config_path.exists()
 
 
@@ -141,10 +141,10 @@ class TestConfigurationHandling:
     """Test cases for configuration file handling."""
 
     def test_config_yaml_format(self):
-        """Test that config.yaml has the correct format."""
+        """Test that config.yaml.example has the correct format."""
         import yaml
 
-        config_path = Path(__file__).parent.parent / "config" / "config.yaml"
+        config_path = Path(__file__).parent.parent / "config" / "config.yaml.example"
 
         with open(config_path) as f:
             config = yaml.safe_load(f)
@@ -157,10 +157,10 @@ class TestConfigurationHandling:
         assert "address_hint" in config["address"]
 
     def test_config_standard_test_address(self):
-        """Test that config uses the standard test address."""
+        """Test that config example uses the standard test address."""
         import yaml
 
-        config_path = Path(__file__).parent.parent / "config" / "config.yaml"
+        config_path = Path(__file__).parent.parent / "config" / "config.yaml.example"
 
         with open(config_path) as f:
             config = yaml.safe_load(f)
