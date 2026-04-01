@@ -1,6 +1,6 @@
 """Tests for hounslow_bin_collection package."""
 
-from src.hounslow_bin_collection import __author__, __version__
+from hounslow_bin_collection import __author__, __version__
 
 
 def test_version():
@@ -16,9 +16,9 @@ def test_author():
 
 def test_package_import():
     """Test that package can be imported."""
-    import src.hounslow_bin_collection
+    import hounslow_bin_collection
 
-    assert src.hounslow_bin_collection is not None
+    assert hounslow_bin_collection is not None
 
 
 class TestHounslow_bin_collection:

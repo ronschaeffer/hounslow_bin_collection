@@ -4,10 +4,10 @@ Enhanced collection data extraction for Hounslow bin collection system.
 This module specifically handles the table-based format used by Hounslow Council.
 """
 
+from datetime import datetime
 import logging
 import re
-from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -89,9 +89,9 @@ class HounslowDataExtractor:
                 page_content = (
                     iframe_frame.evaluate("() => document.body.innerText") or ""
                 )
-                logger.debug(f"Method 1 - innerText length: {len(page_content)}")
+                logger.debug("Method 1 - innerText length: %s", len(page_content))
             except Exception as e:
-                logger.debug(f"Method 1 failed: {e}")
+                logger.debug("Method 1 failed: %s", e)
                 last_error = e
 
             # Method 2: If content is too short, try textContent
@@ -100,9 +100,9 @@ class HounslowDataExtractor:
                     page_content = (
                         iframe_frame.evaluate("() => document.body.textContent") or ""
                     )
-                    logger.debug(f"Method 2 - textContent length: {len(page_content)}")
+                    logger.debug("Method 2 - textContent length: %s", len(page_content))
                 except Exception as e:
-                    logger.debug(f"Method 2 failed: {e}")
+                    logger.debug("Method 2 failed: %s", e)
                     last_error = e
 
             # Method 3: If still short, wait longer and try again
@@ -114,10 +114,10 @@ class HounslowDataExtractor:
                         iframe_frame.evaluate("() => document.body.innerText") or ""
                     )
                     logger.debug(
-                        f"Method 3 - retry innerText length: {len(page_content)}"
+                        "Method 3 - retry innerText length: %s", len(page_content)
                     )
                 except Exception as e:
-                    logger.debug(f"Method 3 failed: {e}")
+                    logger.debug("Method 3 failed: %s", e)
                     last_error = e
 
             if not page_content:
@@ -130,7 +130,7 @@ class HounslowDataExtractor:
                     )
                 return result
 
-            logger.debug(f"Final page content length: {len(page_content)} characters")
+            logger.debug("Final page content length: %s characters", len(page_content))
 
             # Validate that we're on the right page and it has expected content
             if not self._validate_page_content(page_content):
@@ -143,11 +143,11 @@ class HounslowDataExtractor:
                 return result
 
             # Log first part of content for debugging
-            logger.debug(f"Content preview: {page_content[:300]}...")
+            logger.debug("Content preview: %s...", page_content[:300])
 
             # Split content into lines for analysis
             lines = [line.strip() for line in page_content.split("\n") if line.strip()]
-            logger.debug(f"Split into {len(lines)} non-empty lines")
+            logger.debug("Split into %s non-empty lines", len(lines))
 
             # Extract bin collection data using the table structure
             bin_data = self._extract_bin_collections(lines)
@@ -210,10 +210,10 @@ class HounslowDataExtractor:
                     }
                 )
 
-            logger.info(f"Successfully extracted data for {len(bin_data)} bin types")
+            logger.info("Successfully extracted data for %s bin types", len(bin_data))
 
         except Exception as e:
-            logger.error(f"Error during enhanced extraction: {e}")
+            logger.error("Error during enhanced extraction: %s", e)
             # Fallback to basic extraction
             result["collections"] = self._basic_fallback_extraction(iframe_frame)
             result["extraction_error"] = str(e)
@@ -264,7 +264,7 @@ class HounslowDataExtractor:
 
         return bin_collections
 
-    def _identify_bin_type(self, line: str) -> Optional[dict[str, str]]:
+    def _identify_bin_type(self, line: str) -> dict[str, str] | None:
         """
         Identify if a line describes a bin type.
 
@@ -325,15 +325,13 @@ class HounslowDataExtractor:
                 break
 
             # Extract frequency information
-            if "collection day" in line_lower:
-                # Look for the frequency in the next line
-                if i + 1 < len(lines):
-                    freq_line = lines[i + 1]
-                    if "every" in freq_line.lower() and (
-                        "week" in freq_line.lower() or "tuesday" in freq_line.lower()
-                    ):
-                        details["frequency"] = freq_line
-                        continue
+            if "collection day" in line_lower and i + 1 < len(lines):
+                freq_line = lines[i + 1]
+                if "every" in freq_line.lower() and (
+                    "week" in freq_line.lower() or "tuesday" in freq_line.lower()
+                ):
+                    details["frequency"] = freq_line
+                    continue
 
             # Also check if the current line itself contains frequency info
             if (
@@ -402,10 +400,10 @@ class HounslowDataExtractor:
                 return f"Every {days_diff} days"
 
         except Exception as e:
-            logger.debug(f"Could not calculate frequency: {e}")
+            logger.debug("Could not calculate frequency: %s", e)
             return ""
 
-    def _extract_date_from_line(self, line: str) -> Optional[str]:
+    def _extract_date_from_line(self, line: str) -> str | None:
         """
         Extract date from a line using various date patterns.
 
@@ -505,7 +503,7 @@ class HounslowDataExtractor:
             return collections
 
         except Exception as e:
-            logger.error(f"Fallback extraction failed: {e}")
+            logger.error("Fallback extraction failed: %s", e)
             return []
 
     def _validate_page_content(self, page_content: str) -> bool:
@@ -547,19 +545,22 @@ class HounslowDataExtractor:
                     # Any one of these terms must be present
                     if not any(term in page_lower for term in indicator):
                         logger.warning(
-                            f"Page validation failed: missing any of {indicator}"
+                            "Page validation failed: missing any of %s", indicator
                         )
                         return False
                 else:
                     # This specific term must be present
                     if indicator not in page_lower:
-                        logger.warning(f"Page validation failed: missing '{indicator}'")
+                        logger.warning(
+                            "Page validation failed: missing '%s'", indicator
+                        )
                         return False
 
             # Check for minimum content length (empty pages or error pages are usually short)
             if len(page_content.strip()) < 100:
                 logger.warning(
-                    f"Page validation failed: content too short ({len(page_content)} chars)"
+                    "Page validation failed: content too short (%s chars)",
+                    len(page_content),
                 )
                 return False
 
@@ -576,7 +577,8 @@ class HounslowDataExtractor:
             for error_indicator in error_indicators:
                 if error_indicator in page_lower:
                     logger.warning(
-                        f"Page validation failed: error indicator '{error_indicator}' found"
+                        "Page validation failed: error indicator '%s' found",
+                        error_indicator,
                     )
                     return False
 
@@ -584,7 +586,7 @@ class HounslowDataExtractor:
             return True
 
         except Exception as e:
-            logger.error(f"Page validation error: {e}")
+            logger.error("Page validation error: %s", e)
             return False
 
     def _validate_extracted_data(self, bin_data: list[dict]) -> bool:
@@ -612,7 +614,7 @@ class HounslowDataExtractor:
             for i, bin_info in enumerate(bin_data):
                 for field in required_fields:
                     if field not in bin_info or not bin_info[field]:
-                        logger.warning(f"Bin {i} missing required field '{field}'")
+                        logger.warning("Bin %s missing required field '%s'", i, field)
                         return False
 
                 # Check that bin_type is one we recognize
@@ -622,15 +624,14 @@ class HounslowDataExtractor:
                     "food_waste",
                     "garden_waste",
                 ]:
-                    logger.warning(f"Unrecognized bin type: {bin_info['bin_type']}")
+                    logger.warning("Unrecognized bin type: %s", bin_info["bin_type"])
                     # Don't fail here as new bin types might be added
 
             # Check that at least one bin has meaningful frequency or date information
             has_schedule_info = False
             for bin_info in bin_data:
                 if (
-                    bin_info.get("frequency")
-                    and bin_info["frequency"] != "Unknown"
+                    (bin_info.get("frequency") and bin_info["frequency"] != "Unknown")
                     or bin_info.get("next_collection")
                     or bin_info.get("last_collection")
                 ):
@@ -641,9 +642,9 @@ class HounslowDataExtractor:
                 logger.warning("No bins have schedule information")
                 return False
 
-            logger.debug(f"Extracted data validation passed for {len(bin_data)} bins")
+            logger.debug("Extracted data validation passed for %s bins", len(bin_data))
             return True
 
         except Exception as e:
-            logger.error(f"Data validation error: {e}")
+            logger.error("Data validation error: %s", e)
             return False

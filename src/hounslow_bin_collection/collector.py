@@ -3,9 +3,8 @@ Core bin collection functionality using browser automation.
 Refactored from the working browser_collector.py for clean architecture.
 """
 
-import logging
 from datetime import datetime
-from typing import Optional
+import logging
 
 from .browser_collector import BrowserWasteCollector
 from .models import AddressConfig, BinCollectionData, CollectionInfo
@@ -38,7 +37,7 @@ class HounslowBinCollector:
         Raises:
             Exception: If data collection fails
         """
-        logger.info(f"Collecting bin data for {address_config.postcode}")
+        logger.info("Collecting bin data for %s", address_config.postcode)
 
         try:
             with BrowserWasteCollector(
@@ -66,16 +65,16 @@ class HounslowBinCollector:
                     retrieved_at=datetime.now(),
                 )
 
-                logger.info(f"Successfully collected data for {bin_data.address}")
+                logger.info("Successfully collected data for %s", bin_data.address)
                 return bin_data
 
         except Exception as e:
-            logger.error(f"Failed to collect bin data: {e}")
+            logger.error("Failed to collect bin data: %s", e)
             raise
 
     def get_next_collection_date(
         self, bin_data: BinCollectionData, waste_type: str
-    ) -> Optional[str]:
+    ) -> str | None:
         """Get the next collection date for a specific waste type.
 
         Args:
@@ -98,9 +97,7 @@ class HounslowBinCollector:
 
         return None
 
-    def get_all_waste_types(
-        self, bin_data: BinCollectionData
-    ) -> dict[str, Optional[str]]:
+    def get_all_waste_types(self, bin_data: BinCollectionData) -> dict[str, str | None]:
         """Get next collection dates for all waste types.
 
         Args:

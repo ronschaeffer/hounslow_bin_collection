@@ -5,7 +5,7 @@ Uses environment variables and YAML configuration like Twickenham Events.
 
 import os
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -13,7 +13,7 @@ import yaml
 class Config:
     """Configuration manager with environment variable support."""
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         """Initialize configuration.
 
         Args:

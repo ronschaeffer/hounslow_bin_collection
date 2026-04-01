@@ -4,7 +4,6 @@ Data models for Hounslow bin collection system.
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
@@ -13,7 +12,7 @@ class CollectionInfo:
 
     text: str
     type: str = "info"
-    dates: Optional[list[str]] = None
+    dates: list[str] | None = None
 
 
 @dataclass
@@ -26,7 +25,7 @@ class BinCollectionData:
     collections: list[CollectionInfo]
     retrieved_at: datetime
 
-    def get_collection_by_type(self, collection_type: str) -> Optional[CollectionInfo]:
+    def get_collection_by_type(self, collection_type: str) -> CollectionInfo | None:
         """Get collection info for a specific waste type."""
         for collection in self.collections:
             if collection_type.lower() in collection.text.lower():
@@ -40,19 +39,19 @@ class BinCollectionData:
                 return collection.dates
         return []
 
-    def get_general_waste_info(self) -> Optional[CollectionInfo]:
+    def get_general_waste_info(self) -> CollectionInfo | None:
         """Get general waste collection info."""
         return self.get_collection_by_type("general waste")
 
-    def get_recycling_info(self) -> Optional[CollectionInfo]:
+    def get_recycling_info(self) -> CollectionInfo | None:
         """Get recycling collection info."""
         return self.get_collection_by_type("recycling")
 
-    def get_food_waste_info(self) -> Optional[CollectionInfo]:
+    def get_food_waste_info(self) -> CollectionInfo | None:
         """Get food waste collection info."""
         return self.get_collection_by_type("food waste")
 
-    def get_garden_waste_info(self) -> Optional[CollectionInfo]:
+    def get_garden_waste_info(self) -> CollectionInfo | None:
         """Get garden waste collection info."""
         return self.get_collection_by_type("garden waste")
 

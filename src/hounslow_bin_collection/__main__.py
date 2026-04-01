@@ -115,7 +115,7 @@ def main():
             return 1
 
     except Exception as e:
-        logger.error(f"Command failed: {e}")
+        logger.error("Command failed: %s", e)
         if args.debug:
             import traceback
 
@@ -207,7 +207,7 @@ def cmd_calendar(config: Config, args) -> int:
         bin_data, getattr(args, "output", None)
     )
 
-    logger.info(f"Calendar generated: {output_path}")
+    logger.info("Calendar generated: %s", output_path)
 
     # Show calendar URL if configured
     from .integrations.calendar import get_calendar_url
@@ -267,7 +267,7 @@ def cmd_all(config: Config, args) -> int:
 
         results.append(("Data Export", f"✓ ({data_path})"))
     except Exception as e:
-        logger.error(f"Data export failed: {e}")
+        logger.error("Data export failed: %s", e)
         results.append(("Data Export", "✗"))
 
     # MQTT integration
@@ -277,7 +277,7 @@ def cmd_all(config: Config, args) -> int:
             success = mqtt_publisher.publish_bin_data(bin_data)
             results.append(("MQTT", "✓" if success else "✗"))
         except Exception as e:
-            logger.error(f"MQTT failed: {e}")
+            logger.error("MQTT failed: %s", e)
             results.append(("MQTT", "✗"))
     else:
         results.append(("MQTT", "Disabled"))
@@ -291,7 +291,7 @@ def cmd_all(config: Config, args) -> int:
             )
             results.append(("Calendar", f"✓ ({output_path})"))
         except Exception as e:
-            logger.error(f"Calendar failed: {e}")
+            logger.error("Calendar failed: %s", e)
             results.append(("Calendar", "✗"))
     else:
         results.append(("Calendar", "Disabled"))

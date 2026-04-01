@@ -5,9 +5,9 @@ This module uses browser automation to access the Hounslow Council website
 and retrieve bin collection dates, bypassing API protection mechanisms.
 """
 
+from datetime import datetime
 import json
 import logging
-from datetime import datetime
 from typing import Any
 
 from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
@@ -138,16 +138,16 @@ class BrowserWasteCollector:
                 "Browser not started. Use as context manager or call start_browser()"
             )
 
-        logger.info(f"Fetching collection data for postcode: {postcode}")
+        logger.info("Fetching collection data for postcode: %s", postcode)
         if address_hint:
-            logger.info(f"Looking for address: {address_hint}")
+            logger.info("Looking for address: %s", address_hint)
             logger.debug(
                 "Tip: For best results, verify address format at https://my.hounslow.gov.uk/service/Waste_and_recycling_collections"
             )
 
         try:
             # Navigate to the form
-            logger.debug(f"Navigating to: {self.FORM_URL}")
+            logger.debug("Navigating to: %s", self.FORM_URL)
             self.page.goto(self.FORM_URL)
             self.page.wait_for_load_state("networkidle")
             self.page.wait_for_timeout(3000)
@@ -186,7 +186,7 @@ class BrowserWasteCollector:
                 raise Exception("Postcode input field not found")
 
             # Enter postcode
-            logger.debug(f"Entering postcode: {postcode}")
+            logger.debug("Entering postcode: %s", postcode)
             postcode_input.fill("")  # Clear first
             postcode_input.fill(postcode)
 
@@ -205,7 +205,7 @@ class BrowserWasteCollector:
             if len(options) <= 1:
                 raise Exception(f"No addresses found for postcode {postcode}")
 
-            logger.debug(f"Found {len(options)} address options")
+            logger.debug("Found %s address options", len(options))
 
             # Select address
             selected_option = None
@@ -213,7 +213,7 @@ class BrowserWasteCollector:
             if address_hint:
                 # Generate variations of the address for better matching
                 address_variations = normalize_address_for_matching(address_hint)
-                logger.debug(f"Trying address variations: {address_variations}")
+                logger.debug("Trying address variations: %s", address_variations)
 
                 # Look for specific address using enhanced matching
                 best_match = None
@@ -233,18 +233,22 @@ class BrowserWasteCollector:
                                 best_match = option
                                 best_match_confidence = confidence
                                 logger.debug(
-                                    f"Enhanced match found: '{variation}' in '{option_text}' (confidence: {confidence:.2f})"
+                                    "Enhanced match found: '%s' in '%s' (confidence: %.2f)",
+                                    variation,
+                                    option_text,
+                                    confidence,
                                 )
 
                 if best_match:
                     selected_option = best_match
                     selected_value = best_match.get_attribute("value")
                     logger.info(
-                        f"Enhanced matching selected: {best_match.text_content()}"
+                        "Enhanced matching selected: %s", best_match.text_content()
                     )
                 else:
                     logger.warning(
-                        f"No enhanced match found for '{address_hint}'. Consider checking the exact address at https://my.hounslow.gov.uk/service/Waste_and_recycling_collections"
+                        "No enhanced match found for '%s'. Consider checking the exact address at https://my.hounslow.gov.uk/service/Waste_and_recycling_collections",
+                        address_hint,
                     )
 
             if not selected_option:
@@ -259,7 +263,7 @@ class BrowserWasteCollector:
 
             # Select the address using JavaScript (since dropdown may not be visible)
             option_text = selected_option.text_content() or ""
-            logger.debug(f"Selecting address: {option_text}")
+            logger.debug("Selecting address: %s", option_text)
 
             result = iframe_frame.evaluate(f"""
                 () => {{
@@ -272,7 +276,7 @@ class BrowserWasteCollector:
                     return 'Address selection failed';
                 }}
             """)
-            logger.debug(f"Address selection result: {result}")
+            logger.debug("Address selection result: %s", result)
 
             iframe_frame.wait_for_timeout(2000)
 
@@ -281,7 +285,7 @@ class BrowserWasteCollector:
             uprn_value = (
                 uprn_field.get_attribute("value") if uprn_field else selected_value
             )
-            logger.debug(f"UPRN populated: {uprn_value}")
+            logger.debug("UPRN populated: %s", uprn_value)
 
             # Look for Next/Continue button and click it
             next_buttons = iframe_frame.query_selector_all(
@@ -292,7 +296,7 @@ class BrowserWasteCollector:
             for btn in next_buttons:
                 if btn.is_visible():
                     btn_text = btn.text_content() or ""
-                    logger.debug(f"Clicking button: {btn_text}")
+                    logger.debug("Clicking button: %s", btn_text)
                     btn.click()
                     iframe_frame.wait_for_timeout(5000)  # Extended wait for loading
                     next_clicked = True
@@ -316,12 +320,12 @@ class BrowserWasteCollector:
             return collection_data
 
         except Exception as e:
-            logger.error(f"Failed to fetch collection data: {e}")
+            logger.error("Failed to fetch collection data: %s", e)
             # Take a screenshot for debugging
             try:
                 screenshot_path = f"/tmp/hounslow_error_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
                 self.page.screenshot(path=screenshot_path)
-                logger.info(f"Error screenshot saved to: {screenshot_path}")
+                logger.info("Error screenshot saved to: %s", screenshot_path)
             except Exception:
                 pass
             raise
@@ -472,7 +476,8 @@ class BrowserWasteCollector:
         }
 
         logger.debug(
-            f"Extracted collection data with {len(collection_info.get('collections', []))} collection entries"
+            "Extracted collection data with %s collection entries",
+            len(collection_info.get("collections", [])),
         )
         return collection_info
 
@@ -516,10 +521,7 @@ if __name__ == "__main__":
     # Test the browser collector with configurable address
     import sys
 
-    if len(sys.argv) > 1:
-        test_postcode = sys.argv[1]
-    else:
-        test_postcode = "TW3 3EB"  # Hounslow Council's own postcode
+    test_postcode = sys.argv[1] if len(sys.argv) > 1 else "TW3 3EB"
 
     test_address = "7 Bath Rd" if len(sys.argv) <= 2 else sys.argv[2]
 

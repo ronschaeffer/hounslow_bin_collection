@@ -3,8 +3,8 @@
 Utility to get dynamic version information for Home Assistant device registration.
 """
 
-import subprocess
 from pathlib import Path
+import subprocess
 
 
 def get_git_version() -> str:

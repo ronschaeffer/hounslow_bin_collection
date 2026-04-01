@@ -19,13 +19,13 @@ __author__ = "ronschaeffer"
 __email__ = "ron@ronschaeffer.com"
 
 __all__ = [
+    "AddressConfig",
+    # Integrations
+    "BinCollectionCalendar",
+    "BinCollectionData",
+    "BinCollectionMQTTPublisher",
+    "CollectionInfo",
     # Core functionality
     "Config",
     "HounslowBinCollector",
-    "AddressConfig",
-    "BinCollectionData",
-    "CollectionInfo",
-    # Integrations
-    "BinCollectionCalendar",
-    "BinCollectionMQTTPublisher",
 ]

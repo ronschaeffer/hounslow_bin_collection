@@ -2,9 +2,8 @@
 ICS calendar integration for bin collection data.
 """
 
-import logging
 from datetime import datetime, timedelta
-from typing import Optional
+import logging
 
 from ics import Calendar, Event
 from ics.alarm import DisplayAlarm
@@ -27,7 +26,7 @@ class BinCollectionCalendar:
         self.config = config
 
     def generate_calendar(
-        self, bin_data: BinCollectionData, output_path: Optional[str] = None
+        self, bin_data: BinCollectionData, output_path: str | None = None
     ) -> str:
         """Generate ICS calendar file for bin collection dates.
 
@@ -42,7 +41,7 @@ class BinCollectionCalendar:
             Exception: If calendar generation fails
         """
         try:
-            logger.info(f"Generating calendar for {bin_data.address}")
+            logger.info("Generating calendar for %s", bin_data.address)
 
             calendar = Calendar()
 
@@ -64,16 +63,16 @@ class BinCollectionCalendar:
             with open(output_path, "w") as f:
                 f.writelines(calendar.serialize_iter())
 
-            logger.info(f"Calendar generated: {output_path}")
+            logger.info("Calendar generated: %s", output_path)
             return output_path
 
         except Exception as e:
-            logger.error(f"Failed to generate calendar: {e}")
+            logger.error("Failed to generate calendar: %s", e)
             raise
 
     def _extract_waste_dates(
         self, bin_data: BinCollectionData
-    ) -> dict[str, Optional[str]]:
+    ) -> dict[str, str | None]:
         """Extract next collection dates for each waste type.
 
         Args:
@@ -154,7 +153,7 @@ class BinCollectionCalendar:
                 calendar.events.add(event)
 
         except ValueError as e:
-            logger.warning(f"Could not parse date {first_date}: {e}")
+            logger.warning("Could not parse date %s: %s", first_date, e)
 
     def _create_reminder(self, reminder_time: datetime, message: str):
         """Create a reminder alarm.
@@ -172,7 +171,7 @@ class BinCollectionCalendar:
         return alarm
 
     def generate_outlook_calendar(
-        self, bin_data: BinCollectionData, output_path: Optional[str] = None
+        self, bin_data: BinCollectionData, output_path: str | None = None
     ) -> str:
         """Generate Outlook-compatible ICS calendar.
 
@@ -227,7 +226,7 @@ class BinCollectionCalendar:
         return summary
 
 
-def get_calendar_url(config: Config) -> Optional[str]:
+def get_calendar_url(config: Config) -> str | None:
     """
     Generate calendar subscription URL for MQTT status publishing.
 

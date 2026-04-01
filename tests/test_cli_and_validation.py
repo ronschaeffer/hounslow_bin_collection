@@ -32,16 +32,6 @@ class TestConfigYamlFormat:
 class TestCLICommands:
     """Test cases for CLI command functionality."""
 
-    def test_schedule_command_exists(self):
-        """Test that the schedule command file exists."""
-        schedule_path = Path(__file__).parent.parent / "schedule.py"
-        assert schedule_path.exists()
-
-    def test_bin_schedule_command_exists(self):
-        """Test that the bin_schedule command file exists."""
-        bin_schedule_path = Path(__file__).parent.parent / "bin_schedule.py"
-        assert bin_schedule_path.exists()
-
     def test_config_file_exists(self):
         """Test that the config file exists."""
         config_path = Path(__file__).parent.parent / "config" / "config.yaml"

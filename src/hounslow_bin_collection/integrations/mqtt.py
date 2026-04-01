@@ -1,13 +1,12 @@
 """
-MQTT integration for bin collection data using mqtt_publisher library.
+MQTT integration for bin collection data using ha_mqtt_publisher library.
 """
 
-import logging
 from datetime import datetime
-from typing import Optional
+import logging
 
-from mqtt_publisher.ha_discovery import Device, Sensor, publish_discovery_configs
-from mqtt_publisher.publisher import MQTTPublisher
+from ha_mqtt_publisher.ha_discovery import Device, Sensor, publish_discovery_configs
+from ha_mqtt_publisher.publisher import MQTTPublisher
 
 from ..config import Config
 from ..models import BinCollectionData
@@ -49,7 +48,7 @@ class BinCollectionMQTTPublisher:
             True if successful, False otherwise
         """
         try:
-            logger.info(f"Publishing bin data for {bin_data.address}")
+            logger.info("Publishing bin data for %s", bin_data.address)
 
             # Connect to MQTT broker
             if not self.publisher.connect():
@@ -87,14 +86,14 @@ class BinCollectionMQTTPublisher:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to publish bin data: {e}")
+            logger.error("Failed to publish bin data: %s", e)
             if hasattr(self, "publisher"):
                 self.publisher.disconnect()
             return False
 
     def _extract_waste_dates(
         self, bin_data: BinCollectionData
-    ) -> dict[str, Optional[str]]:
+    ) -> dict[str, str | None]:
         """Extract next collection dates for each waste type.
 
         Args:
@@ -126,7 +125,7 @@ class BinCollectionMQTTPublisher:
         return waste_dates
 
     def _create_waste_sensor(
-        self, waste_type: str, next_date: Optional[str], bin_data: BinCollectionData
+        self, waste_type: str, next_date: str | None, bin_data: BinCollectionData
     ) -> Sensor:
         """Create a waste collection sensor.
 
@@ -144,7 +143,7 @@ class BinCollectionMQTTPublisher:
                 datetime.strptime(next_date, "%Y-%m-%d")  # Validate date format
                 # Future enhancement: calculate days until collection
             except ValueError:
-                logger.warning(f"Could not parse date {next_date}")
+                logger.warning("Could not parse date %s", next_date)
 
         # Create sensor
         sensor = Sensor(
