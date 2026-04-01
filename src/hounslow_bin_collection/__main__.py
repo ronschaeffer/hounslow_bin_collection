@@ -80,6 +80,15 @@ def main():
     status_parser.add_argument("--postcode", required=True, help="postcode to lookup")
     status_parser.add_argument("--address-hint", help="address hint for disambiguation")
 
+    # Serve command (HTTP server for ICS files)
+    serve_parser = subparsers.add_parser("serve", help="serve ICS files over HTTP")
+    serve_parser.add_argument(
+        "--port", type=int, default=8080, help="HTTP port (default: 8080)"
+    )
+    serve_parser.add_argument(
+        "--host", default="0.0.0.0", help="bind address (default: 0.0.0.0)"
+    )
+
     args = parser.parse_args()
 
     # Setup logging
@@ -110,6 +119,8 @@ def main():
             return cmd_all(config, args)
         elif args.command == "status":
             return cmd_status(config, args)
+        elif args.command == "serve":
+            return cmd_serve(config, args)
         else:
             parser.print_help()
             return 1
@@ -324,6 +335,16 @@ def cmd_status(config: Config, args) -> int:
     for waste_type, next_date in summary.items():
         print(f"- {waste_type.replace('_', ' ').title()}: {next_date}")
 
+    return 0
+
+
+def cmd_serve(config: Config, args) -> int:
+    """Serve ICS calendar files over HTTP."""
+    from .integrations.web_server import start_server
+
+    output_dir = str(config.get_output_dir())
+    logger.info("Starting calendar web server on %s:%s", args.host, args.port)
+    start_server(output_dir, host=args.host, port=args.port)
     return 0
 
 

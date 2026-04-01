@@ -4,6 +4,8 @@ services:
     # image: ghcr.io/ronschaeffer/hounslow_bin_collection:latest
     container_name: hounslow-bins
     restart: unless-stopped
+    ports:
+      - "${ICS_PORT:-8208}:8080"
     volumes:
       - ./config:/app/config
       - ./output:/app/output

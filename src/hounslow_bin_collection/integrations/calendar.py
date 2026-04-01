@@ -11,6 +11,14 @@ from ics.alarm import DisplayAlarm
 from ..config import Config
 from ..models import BinCollectionData, _parse_date
 
+# Short display names matching the council website terminology
+WASTE_NAMES = {
+    "general_waste": "Black Bin",
+    "recycling": "Recycling",
+    "food_waste": "Food Waste",
+    "garden_waste": "Garden Waste",
+}
+
 logger = logging.getLogger(__name__)
 
 # Waste type to search terms mapping (shared with MQTT integration)
@@ -139,7 +147,9 @@ class BinCollectionCalendar:
                 event_date = collection_date + timedelta(weeks=week_offset)
 
                 event = Event()
-                event.name = f"{waste_type.replace('_', ' ').title()} Collection"
+                event.name = WASTE_NAMES.get(
+                    waste_type, waste_type.replace("_", " ").title()
+                )
                 event.begin = event_date
                 event.make_all_day()
                 event.description = f"Bin collection for {bin_data.address}"

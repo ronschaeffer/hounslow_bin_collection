@@ -23,6 +23,7 @@
   <Config Name="MQTT Security" Target="MQTT_SECURITY" Type="Variable" Default="none" Description="none, username, or tls">none</Config>
   <Config Name="MQTT Username" Target="MQTT_USERNAME" Type="Variable"></Config>
   <Config Name="MQTT Password" Target="MQTT_PASSWORD" Type="Variable" Mask="true"></Config>
+  <Config Name="ICS Web Server Port" Target="8080" Type="Port" Description="Port for accessing ICS calendar files">8208</Config>
   <Config Name="Calendar Enabled" Target="CALENDAR_ENABLED" Type="Variable" Default="true">true</Config>
   <Config Name="Home Assistant Discovery" Target="HOME_ASSISTANT_ENABLED" Type="Variable" Default="true">true</Config>
 </Container>
