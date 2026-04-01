@@ -40,7 +40,7 @@ def main():
 
     # Collect command
     collect_parser = subparsers.add_parser("collect", help="collect bin data")
-    collect_parser.add_argument("--postcode", required=True, help="postcode to lookup")
+    collect_parser.add_argument("--postcode", help="postcode to lookup")
     collect_parser.add_argument(
         "--address-hint", help="address hint for disambiguation"
     )
@@ -56,12 +56,12 @@ def main():
 
     # MQTT command
     mqtt_parser = subparsers.add_parser("mqtt", help="publish data to MQTT")
-    mqtt_parser.add_argument("--postcode", required=True, help="postcode to lookup")
+    mqtt_parser.add_argument("--postcode", help="postcode to lookup")
     mqtt_parser.add_argument("--address-hint", help="address hint for disambiguation")
 
     # Calendar command
     calendar_parser = subparsers.add_parser("calendar", help="generate ICS calendar")
-    calendar_parser.add_argument("--postcode", required=True, help="postcode to lookup")
+    calendar_parser.add_argument("--postcode", help="postcode to lookup")
     calendar_parser.add_argument(
         "--address-hint", help="address hint for disambiguation"
     )
@@ -71,13 +71,13 @@ def main():
     all_parser = subparsers.add_parser(
         "all", help="collect data and publish to MQTT and calendar"
     )
-    all_parser.add_argument("--postcode", required=True, help="postcode to lookup")
+    all_parser.add_argument("--postcode", help="postcode to lookup")
     all_parser.add_argument("--address-hint", help="address hint for disambiguation")
     all_parser.add_argument("--output", help="output calendar file path")
 
     # Status command
     status_parser = subparsers.add_parser("status", help="show next collection dates")
-    status_parser.add_argument("--postcode", required=True, help="postcode to lookup")
+    status_parser.add_argument("--postcode", help="postcode to lookup")
     status_parser.add_argument("--address-hint", help="address hint for disambiguation")
 
     # Serve command (HTTP server for ICS files)
@@ -103,10 +103,16 @@ def main():
         config = Config(args.config)
 
         # Override with command line arguments where applicable
-        if hasattr(args, "postcode"):
+        if hasattr(args, "postcode") and args.postcode:
             config.config.setdefault("address", {})["postcode"] = args.postcode
         if hasattr(args, "address_hint") and args.address_hint:
             config.config.setdefault("address", {})["address_hint"] = args.address_hint
+
+        # Validate postcode is available from CLI args or config
+        if hasattr(args, "postcode") and not config.get("address.postcode"):
+            parser.error(
+                "postcode is required: use --postcode or set it in config.yaml / HOUNSLOW_POSTCODE"
+            )
 
         # Execute command
         if args.command == "collect":
