@@ -47,7 +47,7 @@ ha-mqtt-publisher = "^0.3.5"
 pytest = "^8.0.0"
 pytest-cov = "^7.0"
 pre-commit = "^4.3.0"
-ruff = "^0.12.0"
+ruff = "^0.15.8"
 
 [build-system]
 requires = ["poetry-core"]
