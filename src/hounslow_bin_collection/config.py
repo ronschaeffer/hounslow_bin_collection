@@ -48,6 +48,10 @@ class Config:
 
     def _load_env_overrides(self) -> None:
         """Load environment variable overrides."""
+        # Set defaults before env overrides
+        self.config.setdefault("app", {})
+        self.config["app"].setdefault("unique_id_prefix", "hounslow_bins")
+
         env_mapping = {
             # Address configuration
             "HOUNSLOW_POSTCODE": "address.postcode",
