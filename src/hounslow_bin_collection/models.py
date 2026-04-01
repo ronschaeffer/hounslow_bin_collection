@@ -2,8 +2,23 @@
 Data models for Hounslow bin collection system.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
+
+
+def _parse_date(date_str: str) -> str | None:
+    """Parse DD/MM/YYYY to YYYY-MM-DD, returning None on failure."""
+    if not date_str:
+        return None
+    try:
+        return datetime.strptime(date_str, "%d/%m/%Y").strftime("%Y-%m-%d")
+    except ValueError:
+        # Already in YYYY-MM-DD format?
+        try:
+            datetime.strptime(date_str, "%Y-%m-%d")
+            return date_str
+        except ValueError:
+            return None
 
 
 @dataclass
@@ -12,7 +27,30 @@ class CollectionInfo:
 
     text: str
     type: str = "info"
-    dates: list[str] | None = None
+    next_collection: str | None = None
+    last_collection: str | None = None
+    frequency: str = ""
+    icon: str = ""
+
+    @property
+    def next_date_iso(self) -> str | None:
+        """Next collection date in YYYY-MM-DD format."""
+        return _parse_date(self.next_collection or "")
+
+    @property
+    def last_date_iso(self) -> str | None:
+        """Last collection date in YYYY-MM-DD format."""
+        return _parse_date(self.last_collection or "")
+
+    @property
+    def dates(self) -> list[str] | None:
+        """List of dates in YYYY-MM-DD format (next, then last)."""
+        result = []
+        if self.next_date_iso:
+            result.append(self.next_date_iso)
+        if self.last_date_iso:
+            result.append(self.last_date_iso)
+        return result if result else None
 
 
 @dataclass
@@ -24,6 +62,7 @@ class BinCollectionData:
     uprn: str
     collections: list[CollectionInfo]
     retrieved_at: datetime
+    bin_schedule: dict = field(default_factory=dict)
 
     def get_collection_by_type(self, collection_type: str) -> CollectionInfo | None:
         """Get collection info for a specific waste type."""
@@ -33,11 +72,12 @@ class BinCollectionData:
         return None
 
     def get_next_dates(self) -> list[str]:
-        """Get all upcoming collection dates."""
+        """Get all upcoming collection dates in YYYY-MM-DD format."""
+        dates = []
         for collection in self.collections:
-            if collection.type == "dates" and collection.dates:
-                return collection.dates
-        return []
+            if collection.next_date_iso:
+                dates.append(collection.next_date_iso)
+        return sorted(set(dates))
 
     def get_general_waste_info(self) -> CollectionInfo | None:
         """Get general waste collection info."""

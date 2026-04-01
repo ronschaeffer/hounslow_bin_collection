@@ -27,13 +27,18 @@ class TestCollectionInfo:
 
     def test_creation_with_all_fields(self):
         """Test CollectionInfo creation with all fields."""
-        dates = ["2024-01-15", "2024-01-22"]
         info = CollectionInfo(
-            text="General waste collection", type="collection", dates=dates
+            text="General waste collection",
+            type="collection",
+            next_collection="15/01/2024",
+            last_collection="08/01/2024",
+            frequency="Every week",
         )
         assert info.text == "General waste collection"
         assert info.type == "collection"
-        assert info.dates == dates
+        assert info.next_date_iso == "2024-01-15"
+        assert info.last_date_iso == "2024-01-08"
+        assert info.dates == ["2024-01-15", "2024-01-08"]
 
     def test_creation_with_custom_type(self):
         """Test CollectionInfo with custom type."""
@@ -245,13 +250,19 @@ class TestDataModelIntegration:
         # Create collection info objects
         collections = [
             CollectionInfo(
-                text="Recycling: Monday", type="recycling", dates=["2024-01-15"]
+                text="Recycling: Monday",
+                type="recycling",
+                next_collection="15/01/2024",
             ),
             CollectionInfo(
-                text="General waste: Thursday", type="general", dates=["2024-01-18"]
+                text="General waste: Thursday",
+                type="general",
+                next_collection="18/01/2024",
             ),
             CollectionInfo(
-                text="Garden waste: Friday", type="garden", dates=["2024-01-19"]
+                text="Garden waste: Friday",
+                type="garden",
+                next_collection="19/01/2024",
             ),
         ]
 
@@ -272,11 +283,11 @@ class TestDataModelIntegration:
         # Test finding specific collections
         recycling = bin_data.get_collection_by_type("recycling")
         assert recycling is not None
-        assert recycling.dates == ["2024-01-15"]
+        assert recycling.next_date_iso == "2024-01-15"
 
         garden = bin_data.get_collection_by_type("garden")
         assert garden is not None
-        assert garden.dates == ["2024-01-19"]
+        assert garden.next_date_iso == "2024-01-19"
 
     def test_datetime_handling(self):
         """Test datetime handling in BinCollectionData."""

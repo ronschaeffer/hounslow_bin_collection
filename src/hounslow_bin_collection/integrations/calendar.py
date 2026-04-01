@@ -9,7 +9,7 @@ from ics import Calendar, Event
 from ics.alarm import DisplayAlarm
 
 from ..config import Config
-from ..models import BinCollectionData
+from ..models import BinCollectionData, _parse_date
 
 logger = logging.getLogger(__name__)
 
@@ -91,13 +91,26 @@ class BinCollectionCalendar:
         """
         waste_dates: dict[str, str | None] = {}
 
+        # Prefer bin_schedule (pre-parsed by extractor) over text matching
+        if bin_data.bin_schedule:
+            for waste_type in WASTE_TYPE_MAPPING:
+                schedule = bin_data.bin_schedule.get(waste_type, {})
+                next_date = schedule.get("next_date", "")
+                waste_dates[waste_type] = _parse_date(next_date)
+            return waste_dates
+
+        # Fallback: search collections by text, preferring entries with dates
         for waste_type, search_terms in WASTE_TYPE_MAPPING.items():
-            # Try each search term until we find a match
             found_date = None
             for term in search_terms:
-                collection = bin_data.get_collection_by_type(term)
-                if collection and collection.dates:
-                    found_date = collection.dates[0]
+                for collection in bin_data.collections:
+                    if (
+                        term.lower() in collection.text.lower()
+                        and collection.next_date_iso
+                    ):
+                        found_date = collection.next_date_iso
+                        break
+                if found_date:
                     break
             waste_dates[waste_type] = found_date
 

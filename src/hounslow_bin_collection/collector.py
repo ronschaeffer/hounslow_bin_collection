@@ -53,7 +53,10 @@ class HounslowBinCollector:
                     collection_info = CollectionInfo(
                         text=item.get("text", ""),
                         type=item.get("type", "info"),
-                        dates=item.get("dates"),
+                        next_collection=item.get("next_collection", ""),
+                        last_collection=item.get("last_collection", ""),
+                        frequency=item.get("frequency", ""),
+                        icon=item.get("icon", ""),
                     )
                     collections.append(collection_info)
 
@@ -63,6 +66,7 @@ class HounslowBinCollector:
                     uprn=result.get("uprn", ""),
                     collections=collections,
                     retrieved_at=datetime.now(),
+                    bin_schedule=result.get("bin_schedule", {}),
                 )
 
                 logger.info("Successfully collected data for %s", bin_data.address)

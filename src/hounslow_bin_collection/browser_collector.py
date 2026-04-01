@@ -152,6 +152,23 @@ class BrowserWasteCollector:
             self.page.wait_for_load_state("networkidle")
             self.page.wait_for_timeout(3000)
 
+            # Dismiss cookie dialog if present
+            cookie_close = self.page.query_selector('button:has-text("Close")')
+            if cookie_close and cookie_close.is_visible():
+                logger.debug("Dismissing cookie dialog")
+                cookie_close.click()
+                self.page.wait_for_timeout(1000)
+
+            # Handle "Before you begin" interstitial (continue without account)
+            skip_link = self.page.query_selector(
+                'a:has-text("continue without an account")'
+            )
+            if skip_link and skip_link.is_visible():
+                logger.debug("Clicking 'continue without an account'")
+                skip_link.click()
+                self.page.wait_for_load_state("networkidle")
+                self.page.wait_for_timeout(5000)
+
             # Find and access the iframe
             iframe_element = self.page.query_selector('iframe[id="fillform-frame-1"]')
             if not iframe_element:
@@ -163,13 +180,6 @@ class BrowserWasteCollector:
 
             logger.debug("Successfully accessed iframe content")
             iframe_frame.wait_for_load_state("networkidle")
-
-            # Dismiss cookie dialog if present
-            cookie_close = self.page.query_selector('button:has-text("Close")')
-            if cookie_close and cookie_close.is_visible():
-                logger.debug("Dismissing cookie dialog")
-                cookie_close.click()
-                self.page.wait_for_timeout(1000)
 
             # Click on "Your address" tab
             address_tab = iframe_frame.query_selector('text="Your address"')
