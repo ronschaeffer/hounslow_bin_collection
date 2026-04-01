@@ -2,7 +2,7 @@
 MQTT integration for bin collection data using ha_mqtt_publisher library.
 """
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 import json
 import logging
 
@@ -37,6 +37,15 @@ WASTE_COLORS = {
 }
 
 TOPIC_PREFIX = "hounslow_bins"
+AVAILABILITY_TOPIC = f"{TOPIC_PREFIX}/status"
+
+# Threshold for page accessibility alert (seconds)
+PAGE_STALE_THRESHOLD = 86400  # 24 hours
+
+
+def _now_iso() -> str:
+    """UTC timestamp in ISO 8601 with Z suffix."""
+    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _compute_scheduled_text(iso_date: str) -> str:
@@ -104,14 +113,26 @@ class BinCollectionMQTTPublisher:
             sw_version=config.get("app.sw_version", "0.1.0"),
         )
 
-    def publish_bin_data(self, bin_data: BinCollectionData) -> bool:
+    def publish_bin_data(
+        self,
+        bin_data: BinCollectionData,
+        *,
+        success: bool = True,
+        error_message: str | None = None,
+        last_success_iso: str | None = None,
+    ) -> bool:
         """Publish bin collection data to MQTT.
 
         Args:
             bin_data: Bin collection data to publish
+            success: Whether the collection run succeeded
+            error_message: Error detail if success is False
+            last_success_iso: ISO timestamp of last successful scrape (for
+                page accessibility tracking). If None, uses current time
+                when success=True.
 
         Returns:
-            True if successful, False otherwise
+            True if MQTT publish succeeded, False otherwise
         """
         try:
             logger.info("Publishing bin data for %s", bin_data.address)
@@ -120,19 +141,13 @@ class BinCollectionMQTTPublisher:
                 logger.error("Failed to connect to MQTT broker")
                 return False
 
+            now = _now_iso()
+
             # Extract next collection dates per waste type
             waste_dates = self._extract_waste_dates(bin_data)
 
-            # Build discovery entities
-            entities = []
-            for waste_type, next_date in waste_dates.items():
-                entities.append(self._create_waste_sensor(waste_type, next_date))
-
-            # Consolidated "next collection" sensor
-            entities.append(self._create_next_collection_sensor())
-
-            # Status sensor
-            entities.append(self._create_status_sensor())
+            # Build all discovery entities
+            entities = self._build_entities(waste_dates)
 
             # Publish Home Assistant discovery configs
             if self.config.is_home_assistant_enabled():
@@ -143,43 +158,104 @@ class BinCollectionMQTTPublisher:
                     device=self.device,
                 )
 
-            # Publish state data for each waste type
+            # --- State data per waste type ---
             for waste_type, next_date in waste_dates.items():
                 topic = f"{TOPIC_PREFIX}/bin_collection_{waste_type}/state"
                 payload = {
                     "date": next_date,
                     "waste_type": waste_type.replace("_", " ").title(),
-                    "last_updated": datetime.now().isoformat(),
+                    "last_updated": now,
                 }
                 self.publisher.publish(topic, json.dumps(payload), retain=True)
 
-            # Publish consolidated next collection sensor
-            self._publish_next_collection(waste_dates)
+            # --- Consolidated next collection ---
+            self._publish_next_collection(waste_dates, now)
 
-            # Publish status
-            status_payload = {
-                "status": "online",
-                "last_updated": datetime.now().isoformat(),
-                "address": bin_data.address,
-                "postcode": bin_data.postcode,
-                "uprn": bin_data.uprn,
-                "collection_count": len(bin_data.collections),
-            }
+            # --- Diagnostic: status ---
+            effective_last_success = last_success_iso
+            if success and not effective_last_success:
+                effective_last_success = now
 
-            from .calendar import get_calendar_url
-
-            calendar_url = get_calendar_url(self.config)
-            if calendar_url:
-                status_payload["calendar_url"] = calendar_url
-
+            status_payload = self._build_status_payload(
+                bin_data, now, success, error_message
+            )
             self.publisher.publish(
                 f"{TOPIC_PREFIX}/bin_collection_status/state",
                 json.dumps(status_payload),
                 retain=True,
             )
 
-            # Publish availability
-            self.publisher.publish(f"{TOPIC_PREFIX}/status", "online", retain=True)
+            # --- Diagnostic: last_run (timestamp) ---
+            self.publisher.publish(
+                f"{TOPIC_PREFIX}/diagnostics/last_run/state",
+                json.dumps({"last_run": now}),
+                retain=True,
+            )
+
+            # --- Diagnostic: last_run_status ---
+            run_status_payload = {
+                "status": "success" if success else "error",
+                "last_updated": now,
+            }
+            if error_message:
+                run_status_payload["error"] = error_message
+            self.publisher.publish(
+                f"{TOPIC_PREFIX}/diagnostics/last_run_status/state",
+                json.dumps(run_status_payload),
+                retain=True,
+            )
+
+            # --- Diagnostic: page_accessible (binary_sensor) ---
+            page_stale = False
+            if effective_last_success:
+                try:
+                    last_dt = datetime.fromisoformat(
+                        effective_last_success.replace("Z", "+00:00")
+                    )
+                    age_seconds = (datetime.now(UTC) - last_dt).total_seconds()
+                    page_stale = age_seconds > PAGE_STALE_THRESHOLD
+                except (ValueError, TypeError):
+                    page_stale = not success
+            else:
+                page_stale = not success
+
+            self.publisher.publish(
+                f"{TOPIC_PREFIX}/diagnostics/page_accessible/state",
+                json.dumps(
+                    {
+                        "page_accessible": "OFF" if page_stale else "ON",
+                        "last_successful_scrape": effective_last_success or "unknown",
+                        "last_updated": now,
+                    }
+                ),
+                retain=True,
+            )
+
+            # --- Diagnostic: collection_count ---
+            active_count = sum(1 for d in waste_dates.values() if d)
+            self.publisher.publish(
+                f"{TOPIC_PREFIX}/diagnostics/collection_count/state",
+                json.dumps(
+                    {
+                        "count": active_count,
+                        "total_types": len(waste_dates),
+                        "last_updated": now,
+                    }
+                ),
+                retain=True,
+            )
+
+            # --- Diagnostic: sw_version ---
+            from .. import __version__
+
+            self.publisher.publish(
+                f"{TOPIC_PREFIX}/diagnostics/sw_version/state",
+                json.dumps({"version": __version__}),
+                retain=True,
+            )
+
+            # --- Availability ---
+            self.publisher.publish(AVAILABILITY_TOPIC, "online", retain=True)
 
             self.publisher.disconnect()
             logger.info("Successfully published bin data to MQTT")
@@ -191,13 +267,150 @@ class BinCollectionMQTTPublisher:
                 self.publisher.disconnect()
             return False
 
-    def _publish_next_collection(self, waste_dates: dict[str, str | None]) -> None:
-        """Publish the consolidated next-waste-collection sensor state.
+    def _build_entities(self, waste_dates: dict[str, str | None]) -> list[Entity]:
+        """Build all discovery entities."""
+        entities: list[Entity] = []
 
-        Finds the soonest collection across all waste types and publishes
-        state + attributes for the mushroom dashboard card.
-        """
-        # Find soonest collection
+        # Per-waste-type sensors
+        for waste_type, next_date in waste_dates.items():
+            entities.append(self._create_waste_sensor(waste_type, next_date))
+
+        # Consolidated next collection
+        entities.append(self._create_next_collection_sensor())
+
+        # Diagnostic sensors
+        entities.append(
+            Entity(
+                config=self.config,
+                device=self.device,
+                component="sensor",
+                name="Last Run",
+                unique_id="last_run",
+                state_topic=f"{TOPIC_PREFIX}/diagnostics/last_run/state",
+                value_template="{{ value_json.last_run }}",
+                device_class="timestamp",
+                entity_category="diagnostic",
+                icon="mdi:clock-outline",
+                availability_topic=AVAILABILITY_TOPIC,
+            )
+        )
+
+        entities.append(
+            Entity(
+                config=self.config,
+                device=self.device,
+                component="sensor",
+                name="Last Run Status",
+                unique_id="last_run_status",
+                state_topic=f"{TOPIC_PREFIX}/diagnostics/last_run_status/state",
+                value_template="{{ value_json.status }}",
+                json_attributes_topic=f"{TOPIC_PREFIX}/diagnostics/last_run_status/state",
+                entity_category="diagnostic",
+                icon="mdi:check-circle",
+                availability_topic=AVAILABILITY_TOPIC,
+            )
+        )
+
+        entities.append(
+            Entity(
+                config=self.config,
+                device=self.device,
+                component="binary_sensor",
+                name="Council Page Accessible",
+                unique_id="page_accessible",
+                state_topic=f"{TOPIC_PREFIX}/diagnostics/page_accessible/state",
+                value_template="{{ value_json.page_accessible }}",
+                json_attributes_topic=f"{TOPIC_PREFIX}/diagnostics/page_accessible/state",
+                device_class="problem",
+                entity_category="diagnostic",
+                icon="mdi:web",
+                payload_on="OFF",
+                payload_off="ON",
+                availability_topic=AVAILABILITY_TOPIC,
+            )
+        )
+
+        entities.append(
+            Entity(
+                config=self.config,
+                device=self.device,
+                component="sensor",
+                name="Collection Types Found",
+                unique_id="collection_count",
+                state_topic=f"{TOPIC_PREFIX}/diagnostics/collection_count/state",
+                value_template="{{ value_json.count }}",
+                json_attributes_topic=f"{TOPIC_PREFIX}/diagnostics/collection_count/state",
+                state_class="measurement",
+                entity_category="diagnostic",
+                icon="mdi:counter",
+                availability_topic=AVAILABILITY_TOPIC,
+            )
+        )
+
+        entities.append(
+            Entity(
+                config=self.config,
+                device=self.device,
+                component="sensor",
+                name="Software Version",
+                unique_id="sw_version",
+                state_topic=f"{TOPIC_PREFIX}/diagnostics/sw_version/state",
+                value_template="{{ value_json.version }}",
+                entity_category="diagnostic",
+                icon="mdi:tag",
+                availability_topic=AVAILABILITY_TOPIC,
+            )
+        )
+
+        # Status sensor
+        entities.append(self._create_status_sensor())
+
+        # Control buttons
+        entities.append(
+            Entity(
+                config=self.config,
+                device=self.device,
+                component="button",
+                name="Refresh",
+                unique_id="refresh",
+                command_topic=f"{TOPIC_PREFIX}/cmd/refresh",
+                icon="mdi:refresh",
+            )
+        )
+
+        return entities
+
+    def _build_status_payload(
+        self,
+        bin_data: BinCollectionData,
+        now: str,
+        success: bool,
+        error_message: str | None,
+    ) -> dict:
+        """Build the status sensor payload."""
+        payload: dict = {
+            "status": "online" if success else "error",
+            "last_updated": now,
+            "address": bin_data.address,
+            "postcode": bin_data.postcode,
+            "uprn": bin_data.uprn,
+            "collection_count": len(bin_data.collections),
+        }
+        if error_message:
+            payload["error"] = error_message
+
+        from .calendar import get_calendar_url
+
+        calendar_url = get_calendar_url(self.config)
+        if calendar_url:
+            payload["calendar_url"] = calendar_url
+
+        return payload
+
+    def _publish_next_collection(
+        self, waste_dates: dict[str, str | None], now: str
+    ) -> None:
+        """Publish the consolidated next-waste-collection sensor state."""
         soonest_type = None
         soonest_date = None
         for waste_type, iso_date in waste_dates.items():
@@ -227,7 +440,7 @@ class BinCollectionMQTTPublisher:
             "icon": icon,
             "icon_color": icon_color,
             "waste_type": soonest_type,
-            "last_updated": datetime.now().isoformat(),
+            "last_updated": now,
         }
 
         self.publisher.publish(
@@ -239,14 +452,7 @@ class BinCollectionMQTTPublisher:
     def _extract_waste_dates(
         self, bin_data: BinCollectionData
     ) -> dict[str, str | None]:
-        """Extract next collection dates for each waste type.
-
-        Args:
-            bin_data: Bin collection data
-
-        Returns:
-            Dictionary mapping waste types to next collection dates (YYYY-MM-DD)
-        """
+        """Extract next collection dates for each waste type (YYYY-MM-DD)."""
         waste_dates: dict[str, str | None] = {}
 
         # Prefer bin_schedule (pre-parsed by extractor) over text matching
@@ -286,13 +492,13 @@ class BinCollectionMQTTPublisher:
             value_template="{{ value_json.date }}",
             json_attributes_topic=f"{TOPIC_PREFIX}/bin_collection_{waste_type}/state",
             icon=WASTE_ICONS.get(waste_type, "mdi:delete"),
-            availability_topic=f"{TOPIC_PREFIX}/status",
+            availability_topic=AVAILABILITY_TOPIC,
             payload_available="online",
             payload_not_available="offline",
         )
 
     def _create_next_collection_sensor(self) -> Entity:
-        """Create the consolidated next-waste-collection sensor for discovery."""
+        """Create the consolidated next-waste-collection sensor."""
         return Entity(
             config=self.config,
             device=self.device,
@@ -303,13 +509,13 @@ class BinCollectionMQTTPublisher:
             value_template="{{ value_json.name }}",
             json_attributes_topic=f"{TOPIC_PREFIX}/next_waste_collection/state",
             icon="mdi:calendar-clock",
-            availability_topic=f"{TOPIC_PREFIX}/status",
+            availability_topic=AVAILABILITY_TOPIC,
             payload_available="online",
             payload_not_available="offline",
         )
 
     def _create_status_sensor(self) -> Entity:
-        """Create overall status sensor for discovery."""
+        """Create overall status sensor."""
         return Entity(
             config=self.config,
             device=self.device,
@@ -321,7 +527,7 @@ class BinCollectionMQTTPublisher:
             json_attributes_topic=f"{TOPIC_PREFIX}/bin_collection_status/state",
             icon="mdi:delete",
             entity_category="diagnostic",
-            availability_topic=f"{TOPIC_PREFIX}/status",
+            availability_topic=AVAILABILITY_TOPIC,
             payload_available="online",
             payload_not_available="offline",
         )
