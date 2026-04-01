@@ -79,6 +79,7 @@ ehthumbs.db
 Thumbs.db
 
 # Project specific
+config/config.yaml
 config/local_*
 *.log
 .cache/
@@ -87,7 +88,10 @@ tmp/
 
 # User Configuration - DO NOT COMMIT
 .env
+.env.local
 
 # Generated Output - DO NOT COMMIT
+output/
 *.ics
 www/
+htmlcov/
