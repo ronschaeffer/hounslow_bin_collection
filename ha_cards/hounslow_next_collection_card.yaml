@@ -1,5 +1,5 @@
 type: custom:mushroom-template-card
-entity: sensor.hounslow_bins_next_waste_collection
+entity: sensor.hounslow_bin_collection_next_waste_collection
 primary: |
   {% set state = states(entity) %}
   {% if state in ['unknown', 'unavailable'] %}
