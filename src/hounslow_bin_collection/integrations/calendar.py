@@ -13,6 +13,14 @@ from ..models import BinCollectionData
 
 logger = logging.getLogger(__name__)
 
+# Waste type to search terms mapping (shared with MQTT integration)
+WASTE_TYPE_MAPPING = {
+    "general_waste": ["general waste", "household waste", "refuse"],
+    "recycling": ["recycling", "recyclable"],
+    "food_waste": ["food waste", "food"],
+    "garden_waste": ["garden waste", "green waste", "garden"],
+}
+
 
 class BinCollectionCalendar:
     """Creates ICS calendar files for bin collection dates."""
@@ -81,25 +89,17 @@ class BinCollectionCalendar:
         Returns:
             Dictionary mapping waste types to next collection dates
         """
-        waste_dates = {}
+        waste_dates: dict[str, str | None] = {}
 
-        # Map waste types to search terms
-        waste_type_mapping = {
-            "general_waste": ["general waste", "household waste", "refuse"],
-            "recycling": ["recycling", "recyclable"],
-            "food_waste": ["food waste", "food"],
-            "garden_waste": ["garden waste", "green waste", "garden"],
-        }
-
-        # Get next dates from collections
-        next_dates = bin_data.get_next_dates()
-
-        for waste_type, search_terms in waste_type_mapping.items():
-            collection = bin_data.get_collection_by_type(search_terms[0])
-            if collection and next_dates:
-                waste_dates[waste_type] = next_dates[0] if next_dates else None
-            else:
-                waste_dates[waste_type] = None
+        for waste_type, search_terms in WASTE_TYPE_MAPPING.items():
+            # Try each search term until we find a match
+            found_date = None
+            for term in search_terms:
+                collection = bin_data.get_collection_by_type(term)
+                if collection and collection.dates:
+                    found_date = collection.dates[0]
+                    break
+            waste_dates[waste_type] = found_date
 
         return waste_dates
 
@@ -119,56 +119,36 @@ class BinCollectionCalendar:
             bin_data: Bin collection data
         """
         try:
-            # Parse the first date
             collection_date = datetime.strptime(first_date, "%Y-%m-%d")
 
-            # Generate recurring events (assume weekly collections)
-            for week_offset in range(0, 52):  # Next 52 weeks
+            # Generate recurring events (assume weekly collections for 52 weeks)
+            for week_offset in range(52):
                 event_date = collection_date + timedelta(weeks=week_offset)
 
-                # Create event
                 event = Event()
                 event.name = f"{waste_type.replace('_', ' ').title()} Collection"
-                event.begin = event_date  # ics library accepts datetime objects
+                event.begin = event_date
                 event.make_all_day()
                 event.description = f"Bin collection for {bin_data.address}"
                 event.location = bin_data.address
-                event.categories = {"Utilities", "Bin Collection"}  # ics uses sets
+                event.categories = {"Utilities", "Bin Collection"}
 
-                # Add reminders
-                # Reminder the evening before at 7 PM
-                reminder_time = event_date.replace(hour=19) - timedelta(days=1)
-                event.alarms.append(
-                    self._create_reminder(reminder_time, "Put bins out tonight")
-                )
+                # Evening reminder: 5 hours before end of day = ~7 PM evening before
+                evening_alarm = DisplayAlarm()
+                evening_alarm.trigger = timedelta(hours=-29)
+                evening_alarm.display_text = "Put bins out tonight"
+                event.alarms.append(evening_alarm)
 
-                # Morning reminder at 6 AM
-                morning_reminder = event_date.replace(hour=6)
-                event.alarms.append(
-                    self._create_reminder(
-                        morning_reminder, "Bins are being collected today"
-                    )
-                )
+                # Morning reminder: 6 AM on collection day = 18 hours before end of day
+                morning_alarm = DisplayAlarm()
+                morning_alarm.trigger = timedelta(hours=-18)
+                morning_alarm.display_text = "Bins are being collected today"
+                event.alarms.append(morning_alarm)
 
                 calendar.events.add(event)
 
         except ValueError as e:
             logger.warning("Could not parse date %s: %s", first_date, e)
-
-    def _create_reminder(self, reminder_time: datetime, message: str):
-        """Create a reminder alarm.
-
-        Args:
-            reminder_time: When to trigger the reminder
-            message: Reminder message
-
-        Returns:
-            Alarm object
-        """
-        alarm = DisplayAlarm()
-        alarm.trigger = reminder_time
-        alarm.display_text = message
-        return alarm
 
     def generate_outlook_calendar(
         self, bin_data: BinCollectionData, output_path: str | None = None
@@ -182,13 +162,7 @@ class BinCollectionCalendar:
         Returns:
             Path to generated calendar file
         """
-        # Use the same generation logic but with Outlook-specific formatting
-        calendar_path = self.generate_calendar(bin_data, output_path)
-
-        # Post-process for Outlook compatibility if needed
-        # Outlook generally handles standard ICS well, but we could add specific tweaks here
-
-        return calendar_path
+        return self.generate_calendar(bin_data, output_path)
 
     def get_next_collection_summary(
         self, bin_data: BinCollectionData
@@ -236,18 +210,14 @@ def get_calendar_url(config: Config) -> str | None:
     Returns:
         Calendar URL or None if not configured
     """
-    # Check if calendar export is enabled
     if not config.get("calendar.enabled", False):
         return None
 
-    # Get URL override from config
     url_override = config.get("calendar.calendar_url_override")
-
     if url_override:
         filename = config.get_calendar_filename()
-        # If override doesn't end with filename, append it
         if not url_override.endswith(".ics"):
             return f"{url_override.rstrip('/')}/{filename}"
         return url_override
 
-    return None  # No URL configured
+    return None
