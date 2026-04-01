@@ -22,11 +22,26 @@ WASTE_TYPE_MAPPING = {
     "garden_waste": ["garden waste", "green waste", "garden"],
 }
 
+# Short display names matching the council website terminology
+WASTE_NAMES = {
+    "general_waste": "Black Bin",
+    "recycling": "Recycling",
+    "food_waste": "Food Waste",
+    "garden_waste": "Garden Waste",
+}
+
 WASTE_ICONS = {
-    "general_waste": "mdi:delete",
+    "general_waste": "mdi:trash-can",
     "recycling": "mdi:recycle",
-    "food_waste": "mdi:food-apple",
-    "garden_waste": "mdi:leaf",
+    "food_waste": "mdi:leaf",
+    "garden_waste": "mdi:tree",
+}
+
+WASTE_EMOJI = {
+    "general_waste": "\U0001f5d1\ufe0f",  # 🗑️
+    "recycling": "\u267b\ufe0f",  # ♻️
+    "food_waste": "\U0001f96c",  # 🥬
+    "garden_waste": "\U0001f333",  # 🌳
 }
 
 WASTE_COLORS = {
@@ -161,9 +176,11 @@ class BinCollectionMQTTPublisher:
             # --- State data per waste type ---
             for waste_type, next_date in waste_dates.items():
                 topic = f"{TOPIC_PREFIX}/bin_collection_{waste_type}/state"
+                name = WASTE_NAMES.get(waste_type, waste_type.replace("_", " ").title())
                 payload = {
                     "date": next_date,
-                    "waste_type": waste_type.replace("_", " ").title(),
+                    "name": name,
+                    "emoji": WASTE_EMOJI.get(waste_type, ""),
                     "last_updated": now,
                 }
                 self.publisher.publish(topic, json.dumps(payload), retain=True)
@@ -421,15 +438,19 @@ class BinCollectionMQTTPublisher:
                 soonest_type = waste_type
 
         if soonest_type and soonest_date:
-            display_name = soonest_type.replace("_", " ").title() + " Collection"
+            display_name = WASTE_NAMES.get(
+                soonest_type, soonest_type.replace("_", " ").title()
+            )
             scheduled = _compute_scheduled_text(soonest_date)
-            icon = WASTE_ICONS.get(soonest_type, "mdi:delete")
+            icon = WASTE_ICONS.get(soonest_type, "mdi:trash-can")
+            emoji = WASTE_EMOJI.get(soonest_type, "")
             base_color = WASTE_COLORS.get(soonest_type, "grey")
             icon_color = _compute_icon_color(soonest_date, base_color)
         else:
             display_name = "No Collections Scheduled"
             scheduled = "Check collection schedule"
             icon = "mdi:calendar-clock"
+            emoji = ""
             icon_color = "grey"
             soonest_date = None
 
@@ -438,6 +459,7 @@ class BinCollectionMQTTPublisher:
             "date": soonest_date,
             "scheduled": scheduled,
             "icon": icon,
+            "emoji": emoji,
             "icon_color": icon_color,
             "waste_type": soonest_type,
             "last_updated": now,
@@ -486,7 +508,7 @@ class BinCollectionMQTTPublisher:
             config=self.config,
             device=self.device,
             component="sensor",
-            name=f"{waste_type.replace('_', ' ').title()} Collection",
+            name=WASTE_NAMES.get(waste_type, waste_type.replace("_", " ").title()),
             unique_id=f"bin_collection_{waste_type}",
             state_topic=f"{TOPIC_PREFIX}/bin_collection_{waste_type}/state",
             value_template="{{ value_json.date }}",
