@@ -44,7 +44,7 @@ Automated waste collection schedule scraper for the London Borough of Hounslow. 
 4. Extracts collection types, frequencies, and next/last dates
 5. Publishes to MQTT (Home Assistant discovery) and/or generates ICS calendar
 
-Collection dates are extracted in real-time from the council's system, including holiday adjustments.
+Collection dates are extracted in real-time from the council's system, including holiday adjustments. Recycling and food waste are collected on every collection day (alongside black bin or garden waste); if the scraper misses these dates, they are inferred from the companion types.
 
 ## Prerequisites
 
@@ -193,7 +193,7 @@ The consolidated sensor provides attributes for dashboard cards:
   "scheduled": "Wed 08 Apr",
   "icon": "mdi:recycle",
   "emoji": "\u267b\ufe0f",
-  "icon_color": "blue",
+  "icon_color": "green",
   "waste_type": "recycling",
   "last_updated": "2026-04-01T20:41:18Z"
 }
@@ -203,7 +203,7 @@ The consolidated sensor provides attributes for dashboard cards:
 |-------|--------|
 | `name` | "Black Bin", "Recycling", "Food Waste", "Garden Waste" |
 | `scheduled` | "Today", "Tomorrow", "In 3 days", "Wed 08 Apr", etc. |
-| `icon` | `mdi:trash-can`, `mdi:recycle`, `mdi:leaf`, `mdi:tree` |
+| `icon` | `mdi:trash-can`, `mdi:recycle`, `mdi:leaf`, `mdi:flower` |
 | `icon_color` | `red` (today), `orange` (tomorrow), `amber` (3 days), or waste-type color |
 
 ## Home Assistant Integration

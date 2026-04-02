@@ -40,6 +40,8 @@ src/hounslow_bin_collection/
 
 **Data flow:** CLI/scheduler -> `HounslowBinCollector.collect_bin_data()` -> `BrowserWasteCollector` (Playwright navigates council site iframe, enters postcode, selects address) -> `HounslowDataExtractor` parses results -> `BinCollectionData` model -> published to MQTT and/or written as ICS.
 
+**Date inference:** Recycling and food waste are collected on every collection day (same day as black bin or garden waste). If the scraper misses these dates, `fill_recycling_food_dates()` in `models.py` fills them from companion types. Extrapolation is limited to 7 days past a scheduled black bin collection. The `next_waste_collection` sensor shows whichever of black bin, garden waste, or recycling is genuinely soonest (food waste is never the headline).
+
 **Key external dependency:** `ha-mqtt-publisher` (PyPI) provides `MQTTPublisher`, `Device`, `Sensor`, and `publish_discovery_configs`.
 
 ## Code standards
