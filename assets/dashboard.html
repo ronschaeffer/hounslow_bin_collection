@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bin Collection</title>
+<style>
+:root {
+  --bg: #0f1923; --card-bg: #1a2733; --card-hover: #1f3040;
+  --text: #e8edf2; --text-muted: #8899aa; --accent: #4fc3f7;
+  --badge-bg: #263545; --border: #2a3a4a;
+  --green: #66bb6a; --orange: #ffa726; --red: #ef5350; --amber: #ffca28;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh;
+}
+.header {
+  background: var(--card-bg); border-bottom: 1px solid var(--border);
+  padding: 16px 24px; display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-left h1 { font-size: 22px; font-weight: 700; }
+.header-left .icon { font-size: 26px; }
+.header-right { display: flex; align-items: center; gap: 16px;
+  font-size: 13px; color: var(--text-muted); }
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green); display: inline-block;
+}
+.status-dot.offline { background: var(--red); }
+.container { max-width: 640px; margin: 0 auto; padding: 20px 16px; }
+.address-bar {
+  text-align: center; color: var(--text-muted); font-size: 13px;
+  margin-bottom: 20px; padding: 8px 0;
+}
+.next-banner {
+  background: var(--card-bg); border: 2px solid var(--accent);
+  border-radius: 16px; padding: 24px; margin-bottom: 20px;
+  text-align: center;
+}
+.next-banner .label { font-size: 12px; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 8px; }
+.next-banner .emoji { font-size: 48px; margin-bottom: 8px; }
+.next-banner .name { font-size: 24px; font-weight: 700; }
+.next-banner .when {
+  font-size: 18px; font-weight: 600; margin-top: 4px;
+}
+.next-banner .date-detail {
+  font-size: 13px; color: var(--text-muted); margin-top: 4px;
+}
+.section-label {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--text-muted); margin-bottom: 10px; padding-left: 4px;
+}
+.bin-card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 16px;
+  transition: background 0.2s, border-color 0.2s;
+}
+.bin-card:hover { background: var(--card-hover); border-color: var(--accent); }
+.bin-card.highlight { border-color: var(--accent); }
+.bin-emoji {
+  font-size: 32px; width: 52px; height: 52px;
+  background: var(--badge-bg); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.bin-body { flex: 1; min-width: 0; }
+.bin-name { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+.bin-detail { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.bin-badges { display: flex; flex-direction: column; align-items: flex-end;
+  gap: 6px; flex-shrink: 0; }
+.badge {
+  border-radius: 8px; padding: 6px 12px; font-size: 14px; font-weight: 700;
+  white-space: nowrap; text-align: center; min-width: 80px;
+}
+.badge-sub {
+  font-size: 11px; color: var(--text-muted); font-weight: 400;
+  text-align: right; margin-top: 2px;
+}
+.badge-today { background: rgba(239,83,80,0.15); color: var(--red); }
+.badge-tomorrow { background: rgba(255,167,38,0.15); color: var(--orange); }
+.badge-soon { background: rgba(255,202,40,0.15); color: var(--amber); }
+.badge-normal { background: var(--badge-bg); color: var(--accent); }
+.badge-none { background: var(--badge-bg); color: var(--text-muted); }
+.calendar-link {
+  text-align: center; margin-top: 20px; padding: 12px;
+}
+.calendar-link a {
+  color: var(--accent); text-decoration: none; font-size: 13px;
+}
+.calendar-link a:hover { text-decoration: underline; }
+.empty-state { text-align: center; padding: 60px 20px;
+  color: var(--text-muted); font-size: 16px; }
+.empty-state .big { font-size: 48px; margin-bottom: 16px; }
+@media (max-width: 600px) {
+  .bin-card { padding: 12px; gap: 10px; }
+  .bin-emoji { width: 40px; height: 40px; font-size: 24px; }
+  .bin-name { font-size: 14px; }
+  .bin-detail { font-size: 12px; }
+  .badge { font-size: 13px; min-width: 70px; padding: 5px 10px; }
+  .next-banner .emoji { font-size: 36px; }
+  .next-banner .name { font-size: 20px; }
+  .next-banner .when { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <span class="icon">&#x1F5D1;&#xFE0F;</span>
+    <h1>Bin Collection</h1>
+  </div>
+  <div class="header-right">
+    <span><span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Loading...</span></span>
+    <span id="clock"></span>
+  </div>
+</div>
+<div class="container">
+  <div class="address-bar" id="address"></div>
+  <div id="nextBanner"></div>
+  <div class="section-label">All Collections</div>
+  <div id="cards"></div>
+  <div class="calendar-link">
+    <a href="/hounslow_bins.ics">&#x1F4C5; Subscribe to calendar (ICS)</a>
+  </div>
+</div>
+<script>
+var REFRESH_MS = 60000;
+
+var BINS = {
+  general_waste: { name: 'Black Bin',    emoji: '\uD83D\uDDD1\uFE0F', order: 1 },
+  recycling:     { name: 'Recycling',    emoji: '\u267B\uFE0F',       order: 2 },
+  food_waste:    { name: 'Food Waste',   emoji: '\uD83E\uDD6C',       order: 3 },
+  garden_waste:  { name: 'Garden Waste', emoji: '\uD83C\uDF3B',       order: 4 }
+};
+
+function esc(s) {
+  var d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+function parseDate(s) {
+  if (!s) return null;
+  var parts = s.split('-');
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+}
+
+function daysUntil(dateStr) {
+  var d = parseDate(dateStr);
+  if (!d) return null;
+  var now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return Math.round((d - now) / 86400000);
+}
+
+function friendlyDate(dateStr) {
+  var days = daysUntil(dateStr);
+  if (days === null) return { text: 'Not scheduled', cls: 'badge-none' };
+  if (days < 0)  return { text: 'Passed', cls: 'badge-none' };
+  if (days === 0) return { text: 'Today', cls: 'badge-today' };
+  if (days === 1) return { text: 'Tomorrow', cls: 'badge-tomorrow' };
+  if (days <= 3)  return { text: 'In ' + days + ' days', cls: 'badge-soon' };
+  var d = parseDate(dateStr);
+  var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return {
+    text: dayNames[d.getDay()] + ' ' + d.getDate() + ' ' + monthNames[d.getMonth()],
+    cls: 'badge-normal'
+  };
+}
+
+function formatDateShort(dateStr) {
+  var d = parseDate(dateStr);
+  if (!d) return '';
+  return d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+}
+
+function extractBins(data) {
+  var bins = {};
+  var collections = data.collections || [];
+  for (var i = 0; i < collections.length; i++) {
+    var c = collections[i];
+    var type = c.type;
+    if (!BINS[type]) continue;
+    var dates = c.dates || [];
+    // First date is next, second is last (sorted by the backend)
+    var nextDate = null, lastDate = null;
+    for (var j = 0; j < dates.length; j++) {
+      var days = daysUntil(dates[j]);
+      if (days !== null && days >= 0) {
+        if (!nextDate || dates[j] < nextDate) nextDate = dates[j];
+      } else {
+        if (!lastDate || dates[j] > lastDate) lastDate = dates[j];
+      }
+    }
+    // Keep the entry with the best data
+    if (!bins[type] || (nextDate && !bins[type].next)) {
+      bins[type] = { next: nextDate, last: lastDate };
+    } else {
+      if (nextDate && (!bins[type].next || nextDate < bins[type].next))
+        bins[type].next = nextDate;
+      if (lastDate && (!bins[type].last || lastDate > bins[type].last))
+        bins[type].last = lastDate;
+    }
+  }
+  return bins;
+}
+
+function findNextCollection(bins) {
+  var soonest = null, soonestType = null;
+  var headline = ['general_waste', 'garden_waste', 'recycling'];
+  for (var i = 0; i < headline.length; i++) {
+    var type = headline[i];
+    if (bins[type] && bins[type].next) {
+      if (!soonest || bins[type].next < soonest) {
+        soonest = bins[type].next;
+        soonestType = type;
+      }
+    }
+  }
+  return soonestType ? { type: soonestType, date: soonest } : null;
+}
+
+function renderBanner(next) {
+  var el = document.getElementById('nextBanner');
+  if (!next) {
+    el.innerHTML = '<div class="next-banner"><div class="label">Next Collection</div>'
+      + '<div class="emoji">&#x1F4AD;</div>'
+      + '<div class="name">No collections scheduled</div></div>';
+    return;
+  }
+  var info = BINS[next.type];
+  var friendly = friendlyDate(next.date);
+  var color = '';
+  if (friendly.cls === 'badge-today') color = 'color:var(--red)';
+  else if (friendly.cls === 'badge-tomorrow') color = 'color:var(--orange)';
+  else if (friendly.cls === 'badge-soon') color = 'color:var(--amber)';
+  else color = 'color:var(--accent)';
+
+  el.innerHTML = '<div class="next-banner">'
+    + '<div class="label">Next Collection</div>'
+    + '<div class="emoji">' + info.emoji + '</div>'
+    + '<div class="name">' + esc(info.name) + '</div>'
+    + '<div class="when" style="' + color + '">' + esc(friendly.text) + '</div>'
+    + '<div class="date-detail">' + esc(formatDateShort(next.date)) + '</div>'
+    + '</div>';
+}
+
+function renderCards(bins) {
+  var el = document.getElementById('cards');
+  var types = Object.keys(BINS).sort(function(a, b) {
+    return BINS[a].order - BINS[b].order;
+  });
+
+  var html = '';
+  for (var i = 0; i < types.length; i++) {
+    var type = types[i];
+    var info = BINS[type];
+    var bin = bins[type];
+    var nextDate = bin ? bin.next : null;
+    var lastDate = bin ? bin.last : null;
+    var friendly = friendlyDate(nextDate);
+
+    var detail = '';
+    if (lastDate) detail = 'Last: ' + formatDateShort(lastDate);
+    if (!nextDate && !lastDate && type === 'garden_waste')
+      detail = 'Out of season';
+
+    html += '<div class="bin-card">'
+      + '<div class="bin-emoji">' + info.emoji + '</div>'
+      + '<div class="bin-body">'
+      + '<div class="bin-name">' + esc(info.name) + '</div>'
+      + '<div class="bin-detail">' + esc(detail) + '</div>'
+      + '</div>'
+      + '<div class="bin-badges">'
+      + '<div class="badge ' + friendly.cls + '">' + esc(friendly.text) + '</div>'
+      + (nextDate ? '<div class="badge-sub">' + esc(formatDateShort(nextDate)) + '</div>' : '')
+      + '</div>'
+      + '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function refresh() {
+  var dot = document.getElementById('statusDot');
+  var txt = document.getElementById('statusText');
+  fetch('/data.json')
+    .then(function(r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      var bins = extractBins(data);
+      var next = findNextCollection(bins);
+      renderBanner(next);
+      renderCards(bins);
+
+      document.getElementById('address').textContent = data.address || '';
+
+      dot.className = 'status-dot';
+      var count = Object.keys(bins).length;
+      txt.textContent = count + ' type' + (count !== 1 ? 's' : '') + ' tracked';
+
+      // Show updated time
+      if (data.last_updated) {
+        var d = new Date(data.last_updated);
+        txt.textContent += ' \u00B7 ' + d.toLocaleDateString();
+      }
+    })
+    .catch(function(e) {
+      dot.className = 'status-dot offline';
+      txt.textContent = 'Error loading data';
+      console.error(e);
+    });
+}
+
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+}
+
+refresh();
+setInterval(refresh, REFRESH_MS);
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>

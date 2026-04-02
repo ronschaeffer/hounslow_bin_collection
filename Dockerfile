@@ -53,8 +53,9 @@ RUN pip install --no-cache-dir /tmp/*.whl && rm /tmp/*.whl
 # Install Playwright Chromium browser
 RUN playwright install chromium
 
-# Copy config defaults
+# Copy config defaults and assets
 COPY config/config.yaml.example /app/config-defaults/config.yaml.example
+COPY assets/ /app/assets/
 
 # Create directories
 RUN mkdir -p /app/config /app/output
