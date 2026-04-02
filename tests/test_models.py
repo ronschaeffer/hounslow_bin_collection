@@ -12,6 +12,7 @@ from hounslow_bin_collection.models import (
     AddressConfig,
     BinCollectionData,
     CollectionInfo,
+    fill_recycling_food_dates,
 )
 
 
@@ -237,6 +238,109 @@ class TestAddressConfig:
         for address_hint in address_hints:
             config = AddressConfig(postcode="TW3 3EB", address_hint=address_hint)
             assert config.address_hint == address_hint
+
+
+class TestFillRecyclingFoodDates:
+    """Test the fill_recycling_food_dates extrapolation logic."""
+
+    def test_fills_missing_recycling_from_black_bin(self):
+        """When recycling is missing but black bin has a date, fill it."""
+        dates = {
+            "general_waste": "2026-04-07",
+            "recycling": None,
+            "food_waste": None,
+            "garden_waste": None,
+        }
+        fill_recycling_food_dates(dates)
+        assert dates["recycling"] == "2026-04-07"
+        assert dates["food_waste"] == "2026-04-07"
+
+    def test_fills_missing_recycling_from_garden_waste(self):
+        """When recycling is missing but garden waste has a date, fill it."""
+        dates = {
+            "general_waste": None,
+            "recycling": None,
+            "food_waste": None,
+            "garden_waste": "2026-04-07",
+        }
+        # No black bin means no extrapolation limit — but garden waste
+        # alone has no limit either, so it fills.
+        fill_recycling_food_dates(dates)
+        assert dates["recycling"] == "2026-04-07"
+        assert dates["food_waste"] == "2026-04-07"
+
+    def test_no_change_when_recycling_already_sooner(self):
+        """Don't overwrite recycling if it's already earlier than companions."""
+        dates = {
+            "general_waste": "2026-04-14",
+            "recycling": "2026-04-07",
+            "food_waste": "2026-04-07",
+            "garden_waste": None,
+        }
+        fill_recycling_food_dates(dates)
+        assert dates["recycling"] == "2026-04-07"
+        assert dates["food_waste"] == "2026-04-07"
+
+    def test_picks_soonest_companion(self):
+        """When both black bin and garden waste have dates, use the soonest."""
+        dates = {
+            "general_waste": "2026-04-14",
+            "recycling": None,
+            "food_waste": None,
+            "garden_waste": "2026-04-07",
+        }
+        fill_recycling_food_dates(dates)
+        assert dates["recycling"] == "2026-04-07"
+        assert dates["food_waste"] == "2026-04-07"
+
+    def test_does_not_extrapolate_beyond_7_days_of_black_bin(self):
+        """Garden waste date more than 7 days after black bin is skipped."""
+        dates = {
+            "general_waste": "2026-04-07",
+            "recycling": None,
+            "food_waste": None,
+            "garden_waste": "2026-04-21",  # 14 days after black bin
+        }
+        fill_recycling_food_dates(dates)
+        # Should fill from black bin (within limit), not garden waste
+        assert dates["recycling"] == "2026-04-07"
+        assert dates["food_waste"] == "2026-04-07"
+
+    def test_no_change_when_no_companions(self):
+        """When neither black bin nor garden waste has dates, nothing changes."""
+        dates = {
+            "general_waste": None,
+            "recycling": None,
+            "food_waste": None,
+            "garden_waste": None,
+        }
+        fill_recycling_food_dates(dates)
+        assert dates["recycling"] is None
+        assert dates["food_waste"] is None
+
+    def test_no_change_when_no_companions_but_recycling_present(self):
+        """Recycling already present, no companions — no change."""
+        dates = {
+            "general_waste": None,
+            "recycling": "2026-04-07",
+            "food_waste": "2026-04-07",
+            "garden_waste": None,
+        }
+        fill_recycling_food_dates(dates)
+        assert dates["recycling"] == "2026-04-07"
+        assert dates["food_waste"] == "2026-04-07"
+
+    def test_garden_within_7_days_of_black_bin(self):
+        """Garden waste within 7 days of black bin is used."""
+        dates = {
+            "general_waste": "2026-04-14",
+            "recycling": None,
+            "food_waste": None,
+            "garden_waste": "2026-04-14",  # Same day as black bin
+        }
+        fill_recycling_food_dates(dates)
+        assert dates["recycling"] == "2026-04-14"
+        assert dates["food_waste"] == "2026-04-14"
 
 
 class TestDataModelIntegration:

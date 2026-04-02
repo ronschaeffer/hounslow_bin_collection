@@ -3,7 +3,7 @@ Data models for Hounslow bin collection system.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def _parse_date(date_str: str) -> str | None:
@@ -19,6 +19,61 @@ def _parse_date(date_str: str) -> str | None:
             return date_str
         except ValueError:
             return None
+
+
+def fill_recycling_food_dates(waste_dates: dict[str, str | None]) -> None:
+    """Fill in missing recycling/food waste dates from black bin or garden waste.
+
+    Recycling and food waste are collected on every collection day (i.e. the
+    same day as black bin or garden waste).  If the scraper picked up a black
+    bin or garden waste date but missed recycling/food waste for that day, this
+    fills the gap.
+
+    Only fills dates within 7 days of a scheduled black bin collection to
+    avoid over-extrapolation.
+    """
+    recycling = waste_dates.get("recycling")
+    food = waste_dates.get("food_waste")
+    black_bin = waste_dates.get("general_waste")
+    garden = waste_dates.get("garden_waste")
+
+    # Collect the dates that recycling/food should also appear on
+    companion_dates = set()
+    if black_bin:
+        companion_dates.add(black_bin)
+    if garden:
+        companion_dates.add(garden)
+
+    if not companion_dates:
+        return
+
+    # Determine the extrapolation limit: 7 days after the latest scheduled
+    # black bin collection.  Garden waste dates are not used for the limit
+    # because garden waste is seasonal.
+    limit_date = None
+    if black_bin:
+        try:
+            bb_dt = datetime.strptime(black_bin, "%Y-%m-%d").date()
+            limit_date = bb_dt + timedelta(days=7)
+        except ValueError:
+            pass
+
+    for iso_date in companion_dates:
+        if limit_date:
+            try:
+                dt = datetime.strptime(iso_date, "%Y-%m-%d").date()
+                if dt > limit_date:
+                    continue
+            except ValueError:
+                continue
+
+        # Pick the soonest valid companion date for each missing type
+        if not recycling or iso_date < recycling:
+            waste_dates["recycling"] = iso_date
+            recycling = iso_date
+        if not food or iso_date < food:
+            waste_dates["food_waste"] = iso_date
+            food = iso_date
 
 
 @dataclass

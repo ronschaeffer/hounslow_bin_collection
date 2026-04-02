@@ -10,7 +10,7 @@ from ha_mqtt_publisher import Device, Entity, publish_discovery_configs
 from ha_mqtt_publisher.publisher import MQTTPublisher
 
 from ..config import Config
-from ..models import BinCollectionData, _parse_date
+from ..models import BinCollectionData, _parse_date, fill_recycling_food_dates
 
 logger = logging.getLogger(__name__)
 
@@ -429,18 +429,11 @@ class BinCollectionMQTTPublisher:
     ) -> None:
         """Publish the consolidated next-waste-collection sensor state.
 
-        Prioritises the headline collection type for the dashboard card:
-        black bin or garden waste (whichever is soonest) over recycling/food
-        waste, since recycling goes out every week and isn't interesting.
-        Falls back to recycling only when neither black bin nor garden waste
-        has a date.
+        Shows whichever of black bin, garden waste, or recycling is soonest.
+        Food waste is never shown as the headline — it always accompanies
+        one of the others.
         """
-        # Pick the headline type: black bin or garden waste (whichever is sooner).
-        # Food waste is never shown — it always accompanies recycling.
-        # Falls back to recycling when neither black bin nor garden waste
-        # has a scheduled date (e.g. outside garden waste season on a
-        # recycling-only week).
-        headline_types = ["general_waste", "garden_waste"]
+        headline_types = ["general_waste", "garden_waste", "recycling"]
         soonest_type = None
         soonest_date = None
         for waste_type in headline_types:
@@ -450,13 +443,6 @@ class BinCollectionMQTTPublisher:
             if soonest_date is None or iso_date < soonest_date:
                 soonest_date = iso_date
                 soonest_type = waste_type
-
-        # Fall back to recycling only (never food waste)
-        if not soonest_type:
-            iso_date = waste_dates.get("recycling")
-            if iso_date:
-                soonest_date = iso_date
-                soonest_type = "recycling"
 
         if soonest_type and soonest_date:
             display_name = WASTE_NAMES.get(
@@ -504,6 +490,7 @@ class BinCollectionMQTTPublisher:
                 schedule = bin_data.bin_schedule.get(waste_type, {})
                 next_date = schedule.get("next_date", "")
                 waste_dates[waste_type] = _parse_date(next_date)
+            fill_recycling_food_dates(waste_dates)
             return waste_dates
 
         # Fallback: search collections by text, preferring entries with dates
@@ -521,6 +508,7 @@ class BinCollectionMQTTPublisher:
                     break
             waste_dates[waste_type] = found_date
 
+        fill_recycling_food_dates(waste_dates)
         return waste_dates
 
     def _create_waste_sensor(self, waste_type: str, next_date: str | None) -> Entity:

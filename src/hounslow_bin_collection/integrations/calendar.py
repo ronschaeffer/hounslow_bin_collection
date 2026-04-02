@@ -9,7 +9,7 @@ from ics import Calendar, Event
 from ics.alarm import DisplayAlarm
 
 from ..config import Config
-from ..models import BinCollectionData, _parse_date
+from ..models import BinCollectionData, _parse_date, fill_recycling_food_dates
 
 # Short display names matching the council website terminology
 WASTE_NAMES = {
@@ -101,6 +101,7 @@ class BinCollectionCalendar:
                 schedule = bin_data.bin_schedule.get(waste_type, {})
                 next_date = schedule.get("next_date", "")
                 waste_dates[waste_type] = _parse_date(next_date)
+            fill_recycling_food_dates(waste_dates)
             return waste_dates
 
         # Fallback: search collections by text, preferring entries with dates
@@ -118,6 +119,7 @@ class BinCollectionCalendar:
                     break
             waste_dates[waste_type] = found_date
 
+        fill_recycling_food_dates(waste_dates)
         return waste_dates
 
     def _add_scraped_events(
