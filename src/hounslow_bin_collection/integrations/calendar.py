@@ -61,13 +61,9 @@ class BinCollectionCalendar:
 
             calendar = Calendar()
 
-            # Add events for each collection type
-            waste_dates = self._extract_waste_dates(bin_data)
-            for waste_type, next_date in waste_dates.items():
-                if next_date:
-                    self._add_collection_events(
-                        calendar, waste_type, next_date, bin_data
-                    )
+            # Only create events for dates actually confirmed on the
+            # council website — no extrapolation into the future.
+            self._add_scraped_events(calendar, bin_data)
 
             # Determine output path
             if not output_path:
@@ -124,59 +120,54 @@ class BinCollectionCalendar:
 
         return waste_dates
 
-    def _add_collection_events(
+    def _add_scraped_events(
         self,
         calendar: Calendar,
-        waste_type: str,
-        first_date: str,
         bin_data: BinCollectionData,
     ):
-        """Add collection events to calendar.
+        """Add calendar events using only dates confirmed on the council website.
 
-        Args:
-            calendar: ICS calendar object
-            waste_type: Type of waste
-            first_date: First collection date
-            bin_data: Bin collection data
+        No extrapolation — the daily cron run will refresh the calendar
+        with updated dates from the website.
         """
-        try:
-            collection_date = datetime.strptime(first_date, "%Y-%m-%d")
+        for collection in bin_data.collections:
+            waste_type = collection.type
+            name = WASTE_NAMES.get(waste_type, waste_type.replace("_", " ").title())
 
-            # Black bin and garden waste alternate fortnightly;
-            # recycling and food waste are collected weekly.
-            fortnightly = waste_type in ("general_waste", "garden_waste")
-            step_weeks = 2 if fortnightly else 1
-            num_events = 26 if fortnightly else 52
+            all_dates = set()
+            if collection.next_date_iso:
+                all_dates.add(collection.next_date_iso)
+            if collection.last_date_iso:
+                all_dates.add(collection.last_date_iso)
 
-            for week_offset in range(num_events):
-                event_date = collection_date + timedelta(weeks=week_offset * step_weeks)
+            for iso_date in sorted(all_dates):
+                try:
+                    event_date = datetime.strptime(iso_date, "%Y-%m-%d")
+                except ValueError:
+                    logger.warning("Could not parse date %s: skipping", iso_date)
+                    continue
 
                 event = Event()
-                event.name = WASTE_NAMES.get(
-                    waste_type, waste_type.replace("_", " ").title()
-                )
+                event.name = name
                 event.begin = event_date
                 event.make_all_day()
                 event.description = f"Bin collection for {bin_data.address}"
                 event.location = bin_data.address
                 event.categories = {"Utilities", "Bin Collection"}
 
-                # Evening reminder: 5 hours before end of day = ~7 PM evening before
+                # Evening reminder: ~7 PM evening before
                 evening_alarm = DisplayAlarm()
                 evening_alarm.trigger = timedelta(hours=-29)
                 evening_alarm.display_text = "Put bins out tonight"
                 event.alarms.append(evening_alarm)
 
-                # Morning reminder: 6 AM on collection day = 18 hours before end of day
+                # Morning reminder: 6 AM on collection day
                 morning_alarm = DisplayAlarm()
                 morning_alarm.trigger = timedelta(hours=-18)
                 morning_alarm.display_text = "Bins are being collected today"
                 event.alarms.append(morning_alarm)
 
                 calendar.events.add(event)
-
-        except ValueError as e:
-            logger.warning("Could not parse date %s: %s", first_date, e)
 
     def generate_outlook_calendar(
         self, bin_data: BinCollectionData, output_path: str | None = None
