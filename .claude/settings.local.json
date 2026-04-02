@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(su - dev -s /bin/bash -c \"pwd && ls\")",
+      "Bash(su:*)"
+    ]
+  }
+}

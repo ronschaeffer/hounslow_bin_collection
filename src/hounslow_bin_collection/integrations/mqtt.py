@@ -34,21 +34,21 @@ WASTE_ICONS = {
     "general_waste": "mdi:trash-can",
     "recycling": "mdi:recycle",
     "food_waste": "mdi:leaf",
-    "garden_waste": "mdi:tree",
+    "garden_waste": "mdi:flower",
 }
 
 WASTE_EMOJI = {
     "general_waste": "\U0001f5d1\ufe0f",  # 🗑️
     "recycling": "\u267b\ufe0f",  # ♻️
     "food_waste": "\U0001f96c",  # 🥬
-    "garden_waste": "\U0001f333",  # 🌳
+    "garden_waste": "\U0001f33b",  # 🌻
 }
 
 WASTE_COLORS = {
-    "general_waste": "grey",
+    "general_waste": "orange",
     "recycling": "green",
     "food_waste": "green",
-    "garden_waste": "brown",
+    "garden_waste": "green",
 }
 
 TOPIC_PREFIX = "hounslow_bins"
@@ -427,15 +427,35 @@ class BinCollectionMQTTPublisher:
     def _publish_next_collection(
         self, waste_dates: dict[str, str | None], now: str
     ) -> None:
-        """Publish the consolidated next-waste-collection sensor state."""
+        """Publish the consolidated next-waste-collection sensor state.
+
+        Prioritises the headline collection type for the dashboard card:
+        black bin or garden waste (whichever is soonest) over recycling/food
+        waste, since recycling goes out every week and isn't interesting.
+        Falls back to recycling only when neither black bin nor garden waste
+        has a date.
+        """
+        # Pick the headline type: black bin or garden waste (whichever is sooner)
+        headline_types = ["general_waste", "garden_waste"]
         soonest_type = None
         soonest_date = None
-        for waste_type, iso_date in waste_dates.items():
+        for waste_type in headline_types:
+            iso_date = waste_dates.get(waste_type)
             if not iso_date:
                 continue
             if soonest_date is None or iso_date < soonest_date:
                 soonest_date = iso_date
                 soonest_type = waste_type
+
+        # Fall back to recycling if no headline type has a date
+        if not soonest_type:
+            for waste_type in ["recycling", "food_waste"]:
+                iso_date = waste_dates.get(waste_type)
+                if not iso_date:
+                    continue
+                if soonest_date is None or iso_date < soonest_date:
+                    soonest_date = iso_date
+                    soonest_type = waste_type
 
         if soonest_type and soonest_date:
             display_name = WASTE_NAMES.get(

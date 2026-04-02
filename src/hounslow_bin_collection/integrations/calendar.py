@@ -142,9 +142,14 @@ class BinCollectionCalendar:
         try:
             collection_date = datetime.strptime(first_date, "%Y-%m-%d")
 
-            # Generate recurring events (assume weekly collections for 52 weeks)
-            for week_offset in range(52):
-                event_date = collection_date + timedelta(weeks=week_offset)
+            # Black bin and garden waste alternate fortnightly;
+            # recycling and food waste are collected weekly.
+            fortnightly = waste_type in ("general_waste", "garden_waste")
+            step_weeks = 2 if fortnightly else 1
+            num_events = 26 if fortnightly else 52
+
+            for week_offset in range(num_events):
+                event_date = collection_date + timedelta(weeks=week_offset * step_weeks)
 
                 event = Event()
                 event.name = WASTE_NAMES.get(

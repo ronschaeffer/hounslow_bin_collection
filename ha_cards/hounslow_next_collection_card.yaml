@@ -16,7 +16,7 @@ secondary: |
   {% endif %}
 icon: |
   {% set wt = state_attr(entity, 'waste_type') %}
-  {% set icons = {'general_waste': 'mdi:trash-can', 'recycling': 'mdi:recycle', 'food_waste': 'mdi:leaf', 'garden_waste': 'mdi:tree'} %}
+  {% set icons = {'general_waste': 'mdi:trash-can', 'recycling': 'mdi:recycle', 'food_waste': 'mdi:leaf', 'garden_waste': 'mdi:flower'} %}
   {{ icons.get(wt, 'mdi:calendar-clock') }}
 icon_color: |
   {% set c = state_attr(entity, 'icon_color') %}
