@@ -29,7 +29,7 @@ src/hounslow_bin_collection/
   __main__.py            # CLI entry point (argparse subcommands: collect, mqtt, calendar, all, status)
   version.py             # Dynamic version management
   config.py              # Config from YAML + env vars (dot-notation access, env overrides)
-  models.py              # Dataclasses: AddressConfig, BinCollectionData, CollectionInfo
+  models.py              # Dataclasses + fill_recycling_food_dates() date inference
   collector.py           # HounslowBinCollector - high-level interface wrapping BrowserWasteCollector
   browser_collector.py   # BrowserWasteCollector - Playwright automation against council website
   enhanced_extractor.py  # HounslowDataExtractor - parses collection data from page content
