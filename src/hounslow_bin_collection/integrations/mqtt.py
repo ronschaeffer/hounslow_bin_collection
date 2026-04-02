@@ -435,7 +435,11 @@ class BinCollectionMQTTPublisher:
         Falls back to recycling only when neither black bin nor garden waste
         has a date.
         """
-        # Pick the headline type: black bin or garden waste (whichever is sooner)
+        # Pick the headline type: black bin or garden waste (whichever is sooner).
+        # Food waste is never shown — it always accompanies recycling.
+        # Falls back to recycling when neither black bin nor garden waste
+        # has a scheduled date (e.g. outside garden waste season on a
+        # recycling-only week).
         headline_types = ["general_waste", "garden_waste"]
         soonest_type = None
         soonest_date = None
@@ -447,15 +451,12 @@ class BinCollectionMQTTPublisher:
                 soonest_date = iso_date
                 soonest_type = waste_type
 
-        # Fall back to recycling if no headline type has a date
+        # Fall back to recycling only (never food waste)
         if not soonest_type:
-            for waste_type in ["recycling", "food_waste"]:
-                iso_date = waste_dates.get(waste_type)
-                if not iso_date:
-                    continue
-                if soonest_date is None or iso_date < soonest_date:
-                    soonest_date = iso_date
-                    soonest_type = waste_type
+            iso_date = waste_dates.get("recycling")
+            if iso_date:
+                soonest_date = iso_date
+                soonest_type = "recycling"
 
         if soonest_type and soonest_date:
             display_name = WASTE_NAMES.get(
