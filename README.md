@@ -34,8 +34,9 @@ Automated waste collection schedule scraper for the London Borough of Hounslow. 
 - **Date Inference:** Recycling and food waste are collected alongside every black bin or garden waste collection; missing dates are filled automatically
 - **Diagnostic Sensors:** Last run timestamp, run status, council page accessibility (alerts if unreachable >24h), collection count, software version
 - **Control Button:** Refresh button to trigger immediate collection from Home Assistant
+- **Web Dashboard:** Dark-themed dashboard showing next collection, per-bin-type cards with urgency badges, and calendar link
 - **ICS Calendar:** Generates calendar files with evening and morning reminders, served over HTTP for the [Remote Calendar](https://www.home-assistant.io/integrations/remote_calendar/) integration
-- **Fully Containerized:** Docker image with Playwright/Chromium, built-in cron scheduler, and ICS web server
+- **Fully Containerized:** Docker image with Playwright/Chromium, built-in cron scheduler, dashboard, and ICS web server
 
 ## How It Works
 
@@ -231,6 +232,10 @@ After MQTT publishing, these entities appear automatically under a single device
 ### Dashboard Card
 
 A [Mushroom](https://github.com/piitaya/lovelace-mushroom) template card for the consolidated sensor is provided in [`ha_cards/`](ha_cards/). It shows the soonest collection with dynamic icon, color, and urgency badges.
+
+### Web Dashboard
+
+The container serves a web dashboard at `http://<container-host>:<PORT>/`. It shows the next collection with urgency badges, per-bin-type cards, and a calendar subscription link. Data refreshes every 60 seconds from `/data.json`.
 
 ### Calendar
 

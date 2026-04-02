@@ -36,6 +36,7 @@ src/hounslow_bin_collection/
   integrations/
     mqtt.py              # BinCollectionMQTTPublisher - uses ha_mqtt_publisher library for HA discovery
     calendar.py          # BinCollectionCalendar - generates ICS files with reminders
+    web_server.py        # Dashboard + ICS/JSON HTTP server (stdlib, no deps)
 ```
 
 **Data flow:** CLI/scheduler -> `HounslowBinCollector.collect_bin_data()` -> `BrowserWasteCollector` (Playwright navigates council site iframe, enters postcode, selects address) -> `HounslowDataExtractor` parses results -> `BinCollectionData` model -> published to MQTT and/or written as ICS.
