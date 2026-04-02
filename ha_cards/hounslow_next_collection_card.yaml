@@ -1,5 +1,5 @@
 type: custom:mushroom-template-card
-entity: sensor.hounslow_bin_collection_next_waste_collection
+entity: sensor.hounslow_bins_next_waste_collection
 primary: |
   {% set state = states(entity) %}
   {% if state in ['unknown', 'unavailable'] %}
@@ -15,8 +15,9 @@ secondary: |
     {{ scheduled }}
   {% endif %}
 icon: |
-  {% set i = state_attr(entity, 'icon') %}
-  {{ i if i else 'mdi:calendar-clock' }}
+  {% set wt = state_attr(entity, 'waste_type') %}
+  {% set icons = {'general_waste': 'mdi:trash-can', 'recycling': 'mdi:recycle', 'food_waste': 'mdi:leaf', 'garden_waste': 'mdi:tree'} %}
+  {{ icons.get(wt, 'mdi:calendar-clock') }}
 icon_color: |
   {% set c = state_attr(entity, 'icon_color') %}
   {{ c if c else 'grey' }}
