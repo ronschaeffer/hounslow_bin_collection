@@ -78,7 +78,7 @@ When the user says **"ship it"**, run the full end-to-end cycle:
 2. **Commit & push:** `make fix`, commit changes, push to main
 3. **Tag & build:** Increment latest `v0.x.y` tag, push tag to trigger `docker-publish.yml` on GitHub Actions
 4. **Deploy:** Use Unraid MCP `update_container` (force=true) on `HounslowBinCollection`
-5. **Verify:** `docker exec HounslowBinCollection hounslow-bins all`, then check HA entities via `ha_search_entities` for `hounslow_bins`
+5. **Verify:** `docker exec HounslowBinCollection hounslow-bins all`, then check HA entities via `ha_search_entities` for `hounslow_bins` (this project has HA integration)
 6. **Docs:** Update README, CLAUDE.md, and Obsidian note (`🏡 Personal/Making & Homelab/Coding/Hounslow Bin Collection.md`)
 
 Key details:
