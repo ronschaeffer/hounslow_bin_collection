@@ -25,5 +25,6 @@
   <Config Name="MQTT Password" Target="MQTT_PASSWORD" Type="Variable" Mask="true"></Config>
   <Config Name="Web Server Port" Target="8080" Type="Port" Description="Port for dashboard and ICS calendar files">8208</Config>
   <Config Name="Calendar Enabled" Target="CALENDAR_ENABLED" Type="Variable" Default="true">true</Config>
+  <Config Name="Dashboard/Calendar URL" Target="CALENDAR_URL_OVERRIDE" Type="Variable" Description="Base URL for dashboard and calendar (e.g. http://10.10.10.20:8208)"></Config>
   <Config Name="Home Assistant Discovery" Target="HOME_ASSISTANT_ENABLED" Type="Variable" Default="true">true</Config>
 </Container>

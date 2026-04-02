@@ -119,6 +119,17 @@ class BinCollectionMQTTPublisher:
             last_will=mqtt_config["last_will"],
         )
 
+        # Dashboard URL for HA device info page "Visit" link
+        dashboard_url = None
+        cal_url = config.get("calendar.calendar_url_override")
+        if cal_url:
+            dashboard_url = (
+                cal_url.rstrip("/").rsplit("/", 1)[0]
+                if cal_url.endswith(".ics")
+                else cal_url.rstrip("/")
+            )
+            dashboard_url += "/"
+
         self.device = Device(
             config,
             identifiers=["hounslow_bins"],
@@ -126,6 +137,7 @@ class BinCollectionMQTTPublisher:
             manufacturer=config.get("app.manufacturer", "ronschaeffer"),
             model=config.get("app.model", "Hounslow Bins"),
             sw_version=config.get("app.sw_version", "0.1.0"),
+            configuration_url=dashboard_url,
         )
 
     def publish_bin_data(

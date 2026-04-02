@@ -63,6 +63,8 @@ class Config:
             "MQTT_USERNAME": "mqtt.auth.username",
             "MQTT_PASSWORD": "mqtt.auth.password",
             "MQTT_SECURITY": "mqtt.security",
+            # Calendar
+            "CALENDAR_URL_OVERRIDE": "calendar.calendar_url_override",
             # Application settings
             "APP_DEBUG": "app.debug",
             "CALENDAR_ENABLED": "calendar.enabled",
