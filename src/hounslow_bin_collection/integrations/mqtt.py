@@ -46,7 +46,7 @@ WASTE_EMOJI = {
 
 WASTE_COLORS = {
     "general_waste": "grey",
-    "recycling": "blue",
+    "recycling": "green",
     "food_waste": "green",
     "garden_waste": "brown",
 }
