@@ -5,7 +5,6 @@ MQTT integration for bin collection data using ha_mqtt_publisher library.
 from datetime import UTC, date, datetime
 import json
 import logging
-
 import os
 
 from ha_mqtt_publisher import Device, Entity, HeartbeatFile, publish_discovery_configs
