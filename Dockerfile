@@ -58,13 +58,21 @@ COPY config/config.yaml.example /app/config-defaults/config.yaml.example
 COPY assets/ /app/assets/
 
 # Create directories
-RUN mkdir -p /app/config /app/output
+RUN mkdir -p /app/config /app/output /app/storage
 
 # Copy entrypoint script
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 8080
+
+# MQTT-aware healthcheck: verifies the cron job has touched the heartbeat
+# file recently (within 25h). The publisher writes this file after each
+# successful publish_bin_data() call. See ha_mqtt_publisher.healthcheck_cli.
+HEALTHCHECK --interval=300s --timeout=10s --start-period=120s --retries=2 \
+    CMD python -m ha_mqtt_publisher.healthcheck_cli \
+        --heartbeat /app/storage/.mqtt_heartbeat \
+        --max-age 90000 || exit 1
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["hounslow-bins", "all"]

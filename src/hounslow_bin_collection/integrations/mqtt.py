@@ -6,7 +6,9 @@ from datetime import UTC, date, datetime
 import json
 import logging
 
-from ha_mqtt_publisher import Device, Entity, publish_discovery_configs
+import os
+
+from ha_mqtt_publisher import Device, Entity, HeartbeatFile, publish_discovery_configs
 from ha_mqtt_publisher.publisher import MQTTPublisher
 
 from ..config import Config
@@ -288,6 +290,19 @@ class BinCollectionMQTTPublisher:
 
             self.publisher.disconnect()
             logger.info("Successfully published bin data to MQTT")
+
+            # Touch the MQTT heartbeat so the Docker HEALTHCHECK CLI knows the
+            # publisher is working. The container is cron-driven (no long-running
+            # MQTT client) so a filesystem heartbeat is the cleanest liveness
+            # signal. See ha_mqtt_publisher.healthcheck_cli.
+            try:
+                heartbeat_path = os.environ.get(
+                    "MQTT_HEARTBEAT_PATH", "/app/storage/.mqtt_heartbeat"
+                )
+                HeartbeatFile(heartbeat_path, max_age_seconds=90000).touch()
+            except Exception as _hb_err:  # pragma: no cover - defensive
+                logger.warning("Failed to touch MQTT heartbeat: %s", _hb_err)
+
             return True
 
         except Exception as e:
