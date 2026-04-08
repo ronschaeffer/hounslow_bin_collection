@@ -269,6 +269,16 @@ An Unraid community template is provided in [`unraid-template/`](unraid-template
 ghcr.io/ronschaeffer/hounslow_bin_collection:latest
 ```
 
+### MQTT-aware healthcheck (since v0.1.10)
+
+Because the container is cron-driven and has no long-running HTTP server, a traditional HTTP healthcheck would be meaningless. Instead, the publisher writes a heartbeat file (default `/app/storage/.mqtt_heartbeat`) after every successful MQTT publish, and the Docker `HEALTHCHECK` runs `python -m ha_mqtt_publisher.healthcheck_cli` to verify the file is recent enough.
+
+The default `--max-age` is `90000` seconds (~25 hours), which absorbs daily-cron schedule jitter without masking a genuinely missed run. If you change `CRON_SCHEDULE` to run more frequently, also reduce `--max-age` accordingly.
+
+**Required bind mount**: `/app/storage` must be mapped to a host directory (e.g. `/mnt/user/appdata/HounslowBinCollection/storage`) so the heartbeat survives container recreation. The provided Unraid template does this; for `docker run` add `-v /path/to/storage:/app/storage`. The heartbeat path can be overridden with `MQTT_HEARTBEAT_PATH`.
+
+Built on `ha_mqtt_publisher`'s shared [`HeartbeatFile`](https://github.com/ronschaeffer/ha_mqtt_publisher#health--liveness).
+
 ## Testing
 
 ```bash
