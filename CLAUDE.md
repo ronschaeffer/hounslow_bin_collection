@@ -61,6 +61,22 @@ Config priority: environment variables > YAML file (`config/config.yaml`). Key e
 - `HOUNSLOW_POSTCODE` / `HOUNSLOW_ADDRESS` - required for browser automation
 - `MQTT_BROKER_URL` / `MQTT_ENABLED` - MQTT integration
 - `CALENDAR_ENABLED` - ICS generation
+- `MQTT_HEARTBEAT_PATH` - heartbeat file location for the MQTT-aware healthcheck (default `/app/storage/.mqtt_heartbeat`)
+
+## MQTT-aware healthcheck (since v0.1.10)
+
+Container is cron-driven and has no long-running HTTP server, so a traditional
+HTTP healthcheck is meaningless. Instead, `BinCollectionMQTTPublisher.publish_bin_data()`
+touches a `HeartbeatFile` after every successful publish, and the Docker
+HEALTHCHECK runs `python -m ha_mqtt_publisher.healthcheck_cli` to verify
+the file is recent (max age 90000s ~25h).
+
+**Required**: `/app/storage` must be a bind-mount on the host, otherwise
+the heartbeat lands in the writable container layer and is wiped on every
+recreate. The Unraid template `my-HounslowBinCollection.xml` (created
+2026-04-08) includes this mount. **Do not remove either the heartbeat
+touch in `mqtt.py` or the HEALTHCHECK in the Dockerfile** — together they
+detect missed daily cron runs that would otherwise go unnoticed.
 
 ## Testing notes
 
