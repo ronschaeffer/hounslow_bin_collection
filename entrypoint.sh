@@ -26,7 +26,8 @@ if [ -n "$CRON_SCHEDULE" ]; then
     echo "Setting up cron schedule: $CRON_SCHEDULE"
 
     # Build the cron command — run the entrypoint args on schedule
-    COMMAND="$*"
+    # Resolve full path to the CLI so cron's minimal PATH finds it
+    COMMAND="/usr/local/bin/hounslow-bins all"
     echo "$CRON_SCHEDULE cd /app && $COMMAND >> /proc/1/fd/1 2>>/proc/1/fd/2" > /etc/cron.d/hounslow-bins
     chmod 0644 /etc/cron.d/hounslow-bins
     crontab /etc/cron.d/hounslow-bins

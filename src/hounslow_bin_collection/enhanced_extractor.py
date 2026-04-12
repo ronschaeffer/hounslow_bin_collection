@@ -517,7 +517,12 @@ class HounslowDataExtractor:
             bool: True if page appears to have expected structure, False otherwise
         """
         try:
-            # Check for basic indicators that this is a bin collection page
+            # Check for basic indicators that this is a bin collection page.
+            # NOTE: schedule indicators (day names, "every") are intentionally
+            # omitted — the council page loads collection data asynchronously
+            # so those terms may not yet be present when validation runs.
+            # _validate_extracted_data() catches the case where no bin data
+            # was actually parsed.
             required_indicators = [
                 "collection",  # Basic collection terminology
                 (
@@ -525,17 +530,6 @@ class HounslowDataExtractor:
                     "waste",
                     "recycling",
                 ),  # Must have at least one waste-related term
-                (
-                    "monday",
-                    "tuesday",
-                    "wednesday",
-                    "thursday",
-                    "friday",
-                    "saturday",
-                    "sunday",
-                    "weekly",
-                    "every",
-                ),  # Schedule indicators
             ]
 
             page_lower = page_content.lower()
